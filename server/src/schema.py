@@ -27,13 +27,12 @@ class UserCreate(UserBase):
 
 class UserResponse(UserBase):
     id: uuid.UUID
-    email: EmailStr 
     created_at: datetime.datetime
     model_config = ConfigDict(from_attributes=True)
 
 
 
-# Inpection Schema
+# Inspection schemas
 class InspectionBase(BaseModel):
     image_url: str
     prediction: str
@@ -48,10 +47,9 @@ class InspectResponse(InspectionBase):
     image_url: str
     prediction: str
     confidence: float
-    human_corrected: bool  # Can be null
-    corrected_label: str
+    human_corrected: bool
+    corrected_label: str | None
     created_at: datetime.datetime
 
     model_config = ConfigDict(from_attributes=True)
-
 

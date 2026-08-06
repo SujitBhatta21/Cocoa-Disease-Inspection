@@ -1,55 +1,23 @@
-import src.models as models, src.schema as schema
-from fastapi import FastAPI, HTTPException, File, UploadFile, Form, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 from contextlib import asynccontextmanager
-from src.db import engine, SessionLocal, create_db_and_tables, get_async_db_session
-from sqlalchemy.orm import Session
-from sqlalchemy import select
+
+from fastapi import FastAPI
+
+from src.api.inspect import router as inspection_router
+from src.database import create_db_and_tables, engine
 
 
 @asynccontextmanager
-async def lifespan(src: FastAPI):
+async def lifespan(app: FastAPI):
     await create_db_and_tables()
     yield
+    await engine.dispose()
 
 
-app = FastAPI(lifespan=lifespan)
-
-# db_dependency = Annotated[Session, Depends(get_db)]
-
-
-text_posts = {"1": {"title": "New Post", "content": "cool project test post"}}
+app = FastAPI(title="Cocoa Disease Inspection API", lifespan=lifespan)
+app.include_router(inspection_router, prefix="/api/v1")
 
 
+@app.get("/health", tags=["health"])
+async def health() -> dict[str, str]:
+    return {"status": "ok"}
 
-@app.post("/create_user")
-async def create_user(user: schema.UserResponse, 
-                      session: AsyncSession = Depends(get_async_db_session)):
-    user = user
-    session.add(user)
-    await session.commit()
-    await session.refresh(user)
-    return user
-
-
-
-@app.get("/feed")
-async def get_feed(
-    session:AsyncSession = Depends(get_async_db_session)
-):
-    result = await session.execute(select(models.User). order_by(models.User.created_at.desc()))
-    posts = [row[0] for row in result.all()]
-
-
-
-
-
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-
-"""
-LOAD ONNX model once here in this file.
-"""

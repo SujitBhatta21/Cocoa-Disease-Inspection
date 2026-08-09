@@ -21,3 +21,37 @@ app.include_router(inspection_router, prefix="/api/v1")
 async def health() -> dict[str, str]:
     return {"status": "ok"}
 
+
+"""
+POST /inspect
+
+POST /override
+
+GET /images
+
+GET /statistics
+
+GET /export
+"""
+@app.post("/inspect")
+async def inspect():
+    return
+
+@app.post("/override")
+async def override():
+    return # might be optional
+
+@app.get("/images")
+async def images():
+    return {"How are you": "daka"}
+
+@app.get("/statistics")
+async def getStatistics(): # For admin
+    return
+
+# TODO: Exporting the new thing
+@app.get("/export")
+async def getExport():
+    return 
+
+

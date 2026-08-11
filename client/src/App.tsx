@@ -1,13 +1,12 @@
-import './App.css'
-import Upload from './page/Upload'
+import "./App.css";
+import UploadPage from "./page/upload";
 
 function App() {
-
   return (
     <>
-      <Upload />
+      <UploadPage />
     </>
-  )
+  );
 }
 
-export default App
+export default App;

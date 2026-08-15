@@ -1,0 +1,16 @@
+# Use ">> uv sync" to sync changes to requirements (PS: it installs inside .venv)
+
+[project]
+name = "server"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi[standard]>=0.141.1",
+    "sqlalchemy>=2.0.51",
+    "asyncpg>=0.31.0",              # NEEDED FOR POSTGRES
+    "greenlet>=3.5.4",              # NEEDED FOR ASYNC SUPPORT FOR sqlalchemy
+
+    "onnx==1.22.0",
+    "onnxruntime==1.28.0",
+    "pillow==12.3.0",
+]

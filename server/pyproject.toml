@@ -9,4 +9,8 @@ dependencies = [
     "sqlalchemy>=2.0.51",
     "asyncpg>=0.31.0",              # NEEDED FOR POSTGRES
     "greenlet>=3.5.4",              # NEEDED FOR ASYNC SUPPORT FOR sqlalchemy
+
+    "onnx==1.22.0",
+    "onnxruntime==1.28.0",
+    "pillow==12.3.0",
 ]

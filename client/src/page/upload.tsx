@@ -1,10 +1,32 @@
 import { useState, useRef } from "react";
 import { FaArrowDown } from "react-icons/fa";
 
+interface BoundingBox {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}
+
+interface DetectionResult {
+  prediction: string;
+  confidence: number;
+  bounding_box: BoundingBox;
+}
+
+interface InspectionResult {
+  detections: DetectionResult[];
+  detection_count: number;
+}
+
 function UploadPage() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const VITE_SERVER_URL = import.meta.env.VITE_SERVER_URL;
+  const [inspectResult, setInspectResult] = useState<InspectionResult | null>(
+    null,
+  );
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -18,6 +40,32 @@ function UploadPage() {
     fileInputRef.current?.click();
   };
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!selectedImage) return;
+
+    const formData = new FormData();
+
+    formData.append("image", selectedImage);
+
+    const response = await fetch(`${VITE_SERVER_URL}/api/v1/inspect`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP Error: ${response.status}`);
+    }
+
+    const data: InspectionResult = await response.json();
+
+    setInspectResult(data);
+
+    console.log(`data: ${data}`);
+    console.log(JSON.stringify(inspectResult, null, 2));
+  };
+
   return (
     <div className=".flex .flex-row .items-center .gap-16 .p-24 .border-green-500 .border-2">
       {/* Hidden file input strictly filtering for images */}
@@ -25,7 +73,7 @@ function UploadPage() {
         type="file"
         ref={fileInputRef}
         onChange={handleFileChange}
-        accept=".jpeg, .jpg, .png"
+        accept="image/*"
         style={{ display: "none" }}
       />
 
@@ -67,12 +115,13 @@ function UploadPage() {
 
       {previewUrl && (
         <div>
-          <form>
-            <input
-              className="p-3 m-3.5 bg-[green] text-white border-10 border-[black]"
+          <form onSubmit={handleSubmit}>
+            <button
+              className="p-3 m-3.5 bg-[green] text-white border-10 border-[black] cursor-pointer"
               type="submit"
-              accept="image/*"
-            ></input>
+            >
+              SUBMIT
+            </button>
           </form>
         </div>
       )}

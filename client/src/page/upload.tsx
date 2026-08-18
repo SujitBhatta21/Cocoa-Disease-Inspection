@@ -78,6 +78,12 @@ function UploadPage() {
       />
 
       {previewUrl ? <h1>Image uploaded </h1> : <h1>Upload an image</h1>}
+      {
+        <p className="py-4">
+          # For reliable result, upload one clearly visible cocoa leaf per
+          image.
+        </p>
+      }
 
       {/* Trigger Button Uploading */}
       <button
@@ -120,7 +126,7 @@ function UploadPage() {
               className="p-3 m-3.5 bg-[green] text-white border-10 border-[black] cursor-pointer"
               type="submit"
             >
-              SUBMIT
+              ANALYSE
             </button>
           </form>
         </div>

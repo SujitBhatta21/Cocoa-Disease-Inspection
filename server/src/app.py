@@ -49,14 +49,6 @@ GET /statistics
 GET /export
 """
 
-@app.post("/override")
-async def override():
-    return # might be optional
-
-@app.get("/images")
-async def images():
-    return {"How are you": "daka"}
-
 @app.get("/statistics")
 async def getStatistics(): # For admin
     return

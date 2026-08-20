@@ -57,6 +57,7 @@ function UploadPage() {
     });
 
     if (!response.ok) {
+      alert(`HTTP Error: ${response.status}: ${response.statusText}`);
       throw new Error(`HTTP Error: ${response.status}`);
     }
 
@@ -79,7 +80,7 @@ function UploadPage() {
   };
 
   return (
-    <div className="flex flex-row items-center gap-16 p-24 border-green-500 border-2">
+    <div className="flex flex-col items-center gap-4 p-24">
       {/* Hidden file input strictly filtering for images */}
       <input
         type="file"

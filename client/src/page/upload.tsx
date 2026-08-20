@@ -1,20 +1,21 @@
 import { useState, useRef } from "react";
 import { FaArrowDown } from "react-icons/fa";
+import Form from "../Form";
 
-interface BoundingBox {
+export interface BoundingBox {
   x1: number;
   y1: number;
   x2: number;
   y2: number;
 }
 
-interface DetectionResult {
+export interface DetectionResult {
   prediction: string;
   confidence: number;
   bounding_box: BoundingBox;
 }
 
-interface InspectionResult {
+export interface InspectionResult {
   detections: DetectionResult[];
   detection_count: number;
 }
@@ -27,6 +28,7 @@ function UploadPage() {
   const [inspectResult, setInspectResult] = useState<InspectionResult | null>(
     null,
   );
+  const [openForm, setOpenForm] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -40,7 +42,7 @@ function UploadPage() {
     fileInputRef.current?.click();
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAnalyseSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!selectedImage) return;
@@ -61,13 +63,23 @@ function UploadPage() {
     const data: InspectionResult = await response.json();
 
     setInspectResult(data);
+    setOpenForm(true);
 
-    console.log(`data: ${data}`);
-    console.log(JSON.stringify(inspectResult, null, 2));
+    console.log("data:", data);
+    // console.log(JSON.stringify(data, null, 2));
+  };
+
+  // Methods for Form.
+  const handleFormSubmit = async () => {
+    return;
+  };
+
+  const onFormClose = async () => {
+    setOpenForm(false);
   };
 
   return (
-    <div className=".flex .flex-row .items-center .gap-16 .p-24 .border-green-500 .border-2">
+    <div className="flex flex-row items-center gap-16 p-24 border-green-500 border-2">
       {/* Hidden file input strictly filtering for images */}
       <input
         type="file"
@@ -121,7 +133,7 @@ function UploadPage() {
 
       {previewUrl && (
         <div>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleAnalyseSubmit}>
             <button
               className="p-3 m-3.5 bg-[green] text-white border-10 border-[black] cursor-pointer"
               type="submit"
@@ -130,6 +142,15 @@ function UploadPage() {
             </button>
           </form>
         </div>
+      )}
+
+      {openForm && (
+        <Form
+          imageURL={previewUrl}
+          metadata={inspectResult}
+          onSubmit={handleFormSubmit}
+          onClose={onFormClose}
+        />
       )}
     </div>
   );

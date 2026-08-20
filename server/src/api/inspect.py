@@ -29,7 +29,8 @@ async def inspect_image(image: UploadFile = File(...)) -> InspectionResult:
 
     try:
         image_bytes = await image.read()
-        upload_blob_image(image_bytes, image.filename)
+        # upload_blob_image(image_bytes, image.filename)
+
         inspection_result = predict_image_inserted(image_bytes)
         return inspection_result
     except ValueError as exc:

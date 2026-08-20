@@ -44,6 +44,9 @@ def upload_blob_image(image: bytes, filename):
             blob_client = container_client.get_blob_client(blob_name)
             blob_client.upload_blob(image, overwrite=True)
 
+            blob_url = blob_client.url
+            return blob_url
+
     except Exception as e:
         raise HTTPException(
             status_code=500, 

@@ -21,5 +21,7 @@ venv.bak/
 .env.development
 
 
+pgAdminSeedDATA.txt
+
 
 .DS_Store

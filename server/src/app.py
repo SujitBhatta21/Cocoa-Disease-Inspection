@@ -5,11 +5,14 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.inspect import router as inspection_router
 from src.database import create_db_and_tables, engine
+from src.seed import seed_database
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await create_db_and_tables()
+    await seed_database()
+    
     yield
     await engine.dispose()
 
@@ -57,5 +60,3 @@ async def getStatistics(): # For admin
 @app.get("/export")
 async def getExport():
     return 
-
-

@@ -11,7 +11,7 @@ from pydantic import BaseModel
 
 
 MODEL_PATH = Path(__file__).with_name("yolo26n.onnx")
-CONFIDENCE_THRESHOLD = 0.25
+CONFIDENCE_THRESHOLD = 0.25 # But anything 0.5 or less needs manual prediction.
 CLASS_NAMES = {
     0: "anthracnose",
     1: "cssvd",

@@ -1,22 +1,31 @@
 import { useState, useRef } from "react";
 import { FaArrowDown } from "react-icons/fa";
+import Form from "../Form";
 
-interface BoundingBox {
+export interface BoundingBox {
   x1: number;
   y1: number;
   x2: number;
   y2: number;
 }
 
-interface DetectionResult {
+export interface DetectionResult {
   prediction: string;
   confidence: number;
   bounding_box: BoundingBox;
 }
 
-interface InspectionResult {
+export interface InspectionResult {
   detections: DetectionResult[];
   detection_count: number;
+}
+
+export interface SubmissionData {
+  // LAter add userID as well. To double check in backend.
+  prediction: string;
+  confidence: number;
+  human_corrected: boolean | null;
+  corrected_label: string | null;
 }
 
 function UploadPage() {
@@ -27,6 +36,7 @@ function UploadPage() {
   const [inspectResult, setInspectResult] = useState<InspectionResult | null>(
     null,
   );
+  const [openForm, setOpenForm] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -40,7 +50,7 @@ function UploadPage() {
     fileInputRef.current?.click();
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAnalyseSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!selectedImage) return;
@@ -55,19 +65,61 @@ function UploadPage() {
     });
 
     if (!response.ok) {
+      alert(`HTTP Error: ${response.status}: ${response.statusText}`);
       throw new Error(`HTTP Error: ${response.status}`);
     }
 
     const data: InspectionResult = await response.json();
 
-    setInspectResult(data);
+    if (data.detection_count <= 0) {
+      alert(
+        "ERROR: Image uploaded has 0 confidence that a cocoa leaf is there.",
+      );
+    } else {
+      setInspectResult(data);
+      setOpenForm(true);
 
-    console.log(`data: ${data}`);
-    console.log(JSON.stringify(inspectResult, null, 2));
+      console.log("data:", data);
+      // console.log(JSON.stringify(data, null, 2));
+    }
+  };
+
+  // Methods for Form.
+  const handleFormSubmit = async (submissionData: SubmissionData) => {
+    if (!selectedImage) {
+      throw new Error("Select an image before submitting.");
+    }
+
+    const formData = new FormData();
+    formData.append("image", selectedImage);
+    formData.append("prediction", submissionData.prediction);
+    formData.append("confidence", String(submissionData.confidence));
+    formData.append("human_corrected", String(submissionData.human_corrected));
+
+    if (submissionData.corrected_label !== null) {
+      formData.append("corrected_label", submissionData.corrected_label);
+    }
+
+    const response = await fetch(`${VITE_SERVER_URL}/api/v1/submission`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Submission failed (${response.status}): ${error}`);
+    }
+
+    await response.json();
+    setOpenForm(false);
+  };
+
+  const onFormClose = async () => {
+    setOpenForm(false);
   };
 
   return (
-    <div className=".flex .flex-row .items-center .gap-16 .p-24 .border-green-500 .border-2">
+    <div className="flex flex-col items-center gap-4 p-24">
       {/* Hidden file input strictly filtering for images */}
       <input
         type="file"
@@ -78,6 +130,12 @@ function UploadPage() {
       />
 
       {previewUrl ? <h1>Image uploaded </h1> : <h1>Upload an image</h1>}
+      {
+        <p className="py-4">
+          # For reliable result, upload one clearly visible cocoa leaf per
+          image.
+        </p>
+      }
 
       {/* Trigger Button Uploading */}
       <button
@@ -115,15 +173,24 @@ function UploadPage() {
 
       {previewUrl && (
         <div>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleAnalyseSubmit}>
             <button
               className="p-3 m-3.5 bg-[green] text-white border-10 border-[black] cursor-pointer"
               type="submit"
             >
-              SUBMIT
+              ANALYSE
             </button>
           </form>
         </div>
+      )}
+
+      {openForm && (
+        <Form
+          imageURL={previewUrl}
+          metadata={inspectResult}
+          onSubmit={handleFormSubmit}
+          onClose={onFormClose}
+        />
       )}
     </div>
   );

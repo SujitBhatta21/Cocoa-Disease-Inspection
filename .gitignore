@@ -17,7 +17,11 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.env.production
+.env.development
 
+
+pgAdminSeedDATA.txt
 
 
 .DS_Store

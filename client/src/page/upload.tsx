@@ -20,6 +20,14 @@ export interface InspectionResult {
   detection_count: number;
 }
 
+export interface SubmissionData {
+  // LAter add userID as well. To double check in backend.
+  prediction: string;
+  confidence: number;
+  human_corrected: boolean | null;
+  corrected_label: string | null;
+}
+
 function UploadPage() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -42,7 +50,7 @@ function UploadPage() {
     fileInputRef.current?.click();
   };
 
-  const handleAnalyseSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAnalyseSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!selectedImage) return;
@@ -63,16 +71,47 @@ function UploadPage() {
 
     const data: InspectionResult = await response.json();
 
-    setInspectResult(data);
-    setOpenForm(true);
+    if (data.detection_count <= 0) {
+      alert(
+        "ERROR: Image uploaded has 0 confidence that a cocoa leaf is there.",
+      );
+    } else {
+      setInspectResult(data);
+      setOpenForm(true);
 
-    console.log("data:", data);
-    // console.log(JSON.stringify(data, null, 2));
+      console.log("data:", data);
+      // console.log(JSON.stringify(data, null, 2));
+    }
   };
 
   // Methods for Form.
-  const handleFormSubmit = async () => {
-    return;
+  const handleFormSubmit = async (submissionData: SubmissionData) => {
+    if (!selectedImage) {
+      throw new Error("Select an image before submitting.");
+    }
+
+    const formData = new FormData();
+    formData.append("image", selectedImage);
+    formData.append("prediction", submissionData.prediction);
+    formData.append("confidence", String(submissionData.confidence));
+    formData.append("human_corrected", String(submissionData.human_corrected));
+
+    if (submissionData.corrected_label !== null) {
+      formData.append("corrected_label", submissionData.corrected_label);
+    }
+
+    const response = await fetch(`${VITE_SERVER_URL}/api/v1/submission`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Submission failed (${response.status}): ${error}`);
+    }
+
+    await response.json();
+    setOpenForm(false);
   };
 
   const onFormClose = async () => {

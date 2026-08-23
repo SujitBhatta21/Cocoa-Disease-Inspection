@@ -70,3 +70,43 @@ async def create_inspection(
     await session.refresh(inspection)
 
     return inspection
+
+
+@router.get("/retrieve_inspections", response_model=list[InspectResponse])
+async def get_all_inspections(
+    session: Annotated[AsyncSession, Depends(get_db_session)]
+    ):
+    all_inspections = await session.execute(
+        select(Inspection)
+    )
+    all_inspections = all_inspections.scalars().all()
+    return all_inspections
+
+
+"""
+Endpoint that takes in user_id and organisation_id and returns
+all the inspection results submitted by this user as a part of this org.
+"""
+@router.get("/retrieve_user_inspection", response_model=InspectResponse)
+async def get_inspection(
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+    organisation_id,
+    user_id,
+):
+    if not organisation_id or not user_id:
+        raise HTTPException(
+            status_code=500,
+            detail="Enter either org_id or user_id or both but not None",
+        )
+
+    result = await session.execute(
+        select(Inspection)
+        .join(User, User.id == Inspection.user_id)
+        .where(
+            Inspection.user_id==user_id, 
+            User.organisation_id==organisation_id
+        )
+    )
+
+    data = result.scalars().all()
+    return data

@@ -1,12 +1,10 @@
-from typing import Annotated
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Form
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.inspect import router as inspection_router
-from src.api.submissions import router as submissions_router
-from src.database import create_db_and_tables, engine
-from src.seed import seed_database
+from src.api.router import api_router
+from src.db.seed import seed_database
+from src.db.session import create_db_and_tables, engine
 
 
 @asynccontextmanager
@@ -19,8 +17,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Cocoa Disease Inspection API", lifespan=lifespan)
-app.include_router(inspection_router, prefix="/api/v1")
-app.include_router(submissions_router, prefix="/api/v1")
+app.include_router(api_router, prefix="/api/v1")
 
 
 ALLOWED_ORIGINS = [

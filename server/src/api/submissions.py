@@ -7,9 +7,9 @@ from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.database import get_db_session
+from src.db.session import get_db_session
 from src.models import Inspection, User
-from src.schema import InspectResponse
+from src.schemas import InspectResponse
 from src.services.storage_service import upload_blob_image
 
 

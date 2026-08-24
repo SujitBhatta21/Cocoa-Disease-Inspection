@@ -1,7 +1,4 @@
-"""Database connection and FastAPI session dependency.
-
-Keep connection setup here; keep table definitions in `models.py`.
-"""
+"""Database engine, SQLAlchemy base, and session dependency."""
 
 from collections.abc import AsyncGenerator
 import os
@@ -18,7 +15,10 @@ POSTGRES_DB = os.getenv("POSTGRES_DB")
 POSTGRES_USER = os.getenv("POSTGRES_USER")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 
-DATABASE_URL = f"postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@localhost:5432/{POSTGRES_DB}"
+DATABASE_URL = (
+    f"postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}"
+    f"@localhost:5432/{POSTGRES_DB}"
+)
 
 
 class Base(DeclarativeBase):

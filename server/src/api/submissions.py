@@ -7,7 +7,7 @@ from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.db.session import get_db_session
+from src.db.session import SessionDependency
 from src.models import Inspection, User
 from src.schemas import InspectResponse
 from src.services.storage_service import upload_blob_image
@@ -24,7 +24,7 @@ async def create_inspection(
     prediction: Annotated[str, Form()],
     confidence: Annotated[float, Form()],
     human_corrected: Annotated[bool, Form()],
-    session: Annotated[AsyncSession, Depends(get_db_session)],
+    session: SessionDependency,
     corrected_label: Annotated[str | None, Form()] = None,
 ) -> Inspection:
     if image.content_type not in ALLOWED_IMAGE_TYPES:
@@ -74,7 +74,7 @@ async def create_inspection(
 
 @router.get("/retrieve_inspections", response_model=list[InspectResponse])
 async def get_all_inspections(
-    session: Annotated[AsyncSession, Depends(get_db_session)]
+    session: SessionDependency
     ):
     all_inspections = await session.execute(
         select(Inspection)
@@ -89,7 +89,7 @@ all the inspection results submitted by this user as a part of this org.
 """
 @router.get("/retrieve_user_inspection", response_model=InspectResponse)
 async def get_inspection(
-    session: Annotated[AsyncSession, Depends(get_db_session)],
+    session: SessionDependency,
     organisation_id,
     user_id,
 ):

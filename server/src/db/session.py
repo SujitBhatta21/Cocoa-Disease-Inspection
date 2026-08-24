@@ -10,6 +10,9 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import DeclarativeBase
 
+from typing import Annotated
+from fastapi import Depends
+
 
 POSTGRES_DB = os.getenv("POSTGRES_DB")
 POSTGRES_USER = os.getenv("POSTGRES_USER")
@@ -40,3 +43,7 @@ async def create_db_and_tables() -> None:
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     async with SessionLocal() as session:
         yield session
+
+
+# Using this global session dependency throughout services for database fetch/post.
+SessionDependency = Annotated[AsyncSession, Depends(get_db_session)]

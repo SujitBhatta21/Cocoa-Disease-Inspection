@@ -25,6 +25,10 @@ class UserBase(BaseModel):
     email: EmailStr
     organisation_id: uuid.UUID
 
+# Later created to use BaseModel for login endpoint not using application/JSON.
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
 
 class UserCreate(UserBase):
     password: str

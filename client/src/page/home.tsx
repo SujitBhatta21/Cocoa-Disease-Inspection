@@ -1,5 +1,10 @@
+import { useState, type ButtonHTMLAttributes } from "react";
+import Login from "./login";
+import SignUp from "./signup";
+
 function Home() {
   const VITE_SERVER_URL = import.meta.env.VITE_SERVER_URL;
+  const [loginPage, setLoginPage] = useState(true);
 
   const handleSubmitLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -30,43 +35,55 @@ function Home() {
     }
   };
 
+  const handleSubmitSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.currentTarget);
+
+    const response = await fetch(`${VITE_SERVER_URL}/api/v1/auth/signup`, {
+      method: "POST",
+      headers: {
+        "content-Type": "application/JSON",
+      },
+      body: JSON.stringify({
+        orgination_name: formData.get("org_name"),
+        email: formData.get("email"),
+        password: formData.get("password"),
+        role: formData.get("role"),
+      }),
+    });
+
+    if (!response.ok) {
+      console.log(
+        `RESPONSE Status: ${response.status}: ${response.statusText}`,
+      );
+    }
+    console.log("GOT FROM BACKEND: ", response.body);
+  };
+
+  const handleNotRegistered = async (
+    e: React.MouseEvent<HTMLButtonElement>,
+  ) => {
+    e.preventDefault();
+
+    setLoginPage(!loginPage);
+  };
+
   return (
     <div>
-      <header className="text-2xl font-bold">App</header>{" "}
-      <div className="border-2 min-h-screen flex flex-col items-center justify-center">
-        <form
-          onSubmit={handleSubmitLogin}
-          className="flex flex-col gap-4 border-3 border-radius-1 p-4 bg-[#D3D3D3]"
-        >
-          <h2>Login Page</h2>
-          <label className="flex flex-col gap-1 border-1 p-5 items-start">
-            Username/Email
-            <input
-              required
-              name="email"
-              type="email"
-              className="bg-gray-200 hover:bg-gray-300 border-1"
-            />
-          </label>
-          <label className="flex flex-col gap-1 border-1 p-5 items-start">
-            Password
-            <input
-              required
-              name="password"
-              type="password"
-              className="bg-gray-200 hover:bg-gray-300 border-1"
-            />
-          </label>
+      <header className="text-2xl font-bold">App</header>
 
-          <button
-            className="bg-green-400 gap-3 hover:bg-green-500 text-black"
-            type="submit"
-            value="save"
-          >
-            LOGIN
-          </button>
-        </form>
-      </div>
+      {loginPage ? (
+        <Login
+          handleSubmitLogin={handleSubmitLogin}
+          handleNotRegistered={handleNotRegistered}
+        />
+      ) : (
+        <SignUp
+          handleSubmitSignUp={handleSubmitSignUp}
+          handleNotRegistered={handleNotRegistered}
+        />
+      )}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import datetime
 import uuid
 
 from pydantic import BaseModel, ConfigDict, EmailStr
+from src.role import UserRole
 
 
 class OrganisationBase(BaseModel):
@@ -24,6 +25,7 @@ class OrganisationResponse(OrganisationBase):
 class UserBase(BaseModel):
     email: EmailStr
     organisation_id: uuid.UUID
+    role: UserRole
 
 # Later created to use BaseModel for login endpoint not using application/JSON.
 class UserLogin(BaseModel):

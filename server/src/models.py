@@ -6,7 +6,8 @@ import uuid
 from sqlalchemy import Boolean, DateTime, Float, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.database import Base
+from src.db.session import Base
+from src.role import UserRole
 
 
 def utc_now() -> datetime.datetime:
@@ -31,6 +32,7 @@ class User(Base):
     organisation_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("organisations.id"), nullable=False) 
     email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String, nullable=False)
+    role: Mapped[UserRole] = mapped_column(default=UserRole.USER, nullable=False)
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now
     )

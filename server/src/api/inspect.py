@@ -6,9 +6,6 @@ from src.services.inference_service import (
     InspectionResult,
     predict_image_inserted,
 )
-from src.services.storage_service import upload_blob_image
-
-
 router = APIRouter(prefix="/inspect", tags=["inspection"])
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png"}
 
@@ -32,5 +29,4 @@ async def inspect_image(image: UploadFile = File(...)) -> InspectionResult:
         return inspection_result
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-
 

@@ -1,55 +1,63 @@
-import uuid
+"""Pydantic request and response schemas."""
+
 import datetime
-from pydantic import BaseModel, EmailStr, ConfigDict
+import uuid
+
+from pydantic import BaseModel, ConfigDict, EmailStr
+from src.role import UserRole
 
 
-# Organisation Schema
 class OrganisationBase(BaseModel):
     name: str
 
+
 class OrganisationCreate(OrganisationBase):
     pass
+
 
 class OrganisationResponse(OrganisationBase):
     id: uuid.UUID
     created_at: datetime.datetime
 
-    model_config = ConfigDict(from_attributes=True) # Tells pydantic to read schema from SQLalchemy
+    model_config = ConfigDict(from_attributes=True)
 
 
-# User Schema
 class UserBase(BaseModel):
     email: EmailStr
-    organisation_id: uuid.UUID
+    organisation_name: str
+    role: UserRole
+
+# Later created to use BaseModel for login endpoint not using application/JSON.
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
 
 class UserCreate(UserBase):
     password: str
 
+
 class UserResponse(UserBase):
     id: uuid.UUID
     created_at: datetime.datetime
+
     model_config = ConfigDict(from_attributes=True)
 
 
-
-# Inspection schemas
 class InspectionBase(BaseModel):
     image_url: str
     prediction: str
     confidence: float
 
+
 class InspectCreate(InspectionBase):
     pass
+
 
 class InspectResponse(InspectionBase):
     id: uuid.UUID
     user_id: uuid.UUID
-    image_url: str
-    prediction: str
-    confidence: float
     human_corrected: bool
     corrected_label: str | None
     created_at: datetime.datetime
 
     model_config = ConfigDict(from_attributes=True)
-

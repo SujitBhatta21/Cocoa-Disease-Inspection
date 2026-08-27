@@ -1,7 +1,4 @@
-"""Database connection and FastAPI session dependency.
-
-Keep connection setup here; keep table definitions in `models.py`.
-"""
+"""Database engine, SQLAlchemy base, and session dependency."""
 
 from collections.abc import AsyncGenerator
 import os
@@ -13,12 +10,18 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import DeclarativeBase
 
+from typing import Annotated
+from fastapi import Depends
+
 
 POSTGRES_DB = os.getenv("POSTGRES_DB")
 POSTGRES_USER = os.getenv("POSTGRES_USER")
 POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 
-DATABASE_URL = f"postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@localhost:5432/{POSTGRES_DB}"
+DATABASE_URL = (
+    f"postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}"
+    f"@localhost:5432/{POSTGRES_DB}"
+)
 
 
 class Base(DeclarativeBase):
@@ -40,3 +43,7 @@ async def create_db_and_tables() -> None:
 async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
     async with SessionLocal() as session:
         yield session
+
+
+# Using this global session dependency throughout services for database fetch/post.
+SessionDependency = Annotated[AsyncSession, Depends(get_db_session)]

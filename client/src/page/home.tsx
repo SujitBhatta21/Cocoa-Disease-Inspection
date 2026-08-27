@@ -46,7 +46,7 @@ function Home() {
         "content-Type": "application/JSON",
       },
       body: JSON.stringify({
-        orgination_name: formData.get("org_name"),
+        organisation_name: formData.get("organisation_name"),
         email: formData.get("email"),
         password: formData.get("password"),
         role: formData.get("role"),

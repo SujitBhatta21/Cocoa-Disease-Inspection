@@ -43,7 +43,7 @@ async def signUp(
     """
     # Check if the organisation exists.
     isValid = await auth_service.validateSignUp(
-        org_id=signUpData.organisation_id, 
+        org_name=signUpData.organisation_name,
         email=signUpData.email,
         password=signUpData.password,
         role=signUpData.role,

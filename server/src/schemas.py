@@ -24,7 +24,7 @@ class OrganisationResponse(OrganisationBase):
 
 class UserBase(BaseModel):
     email: EmailStr
-    organisation_id: uuid.UUID
+    organisation_name: str
     role: UserRole
 
 # Later created to use BaseModel for login endpoint not using application/JSON.

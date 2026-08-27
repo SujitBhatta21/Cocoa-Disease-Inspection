@@ -9,6 +9,7 @@ interface SignUpProps {
 
 function SignUp({ handleSubmitSignUp, handleNotRegistered }: SignUpProps) {
   const [selectedRole, setSelectedRole] = useState("user");
+  const organisation_sample_value = "Dummy_org";
 
   return (
     <div className="border-2 min-h-screen flex flex-col items-center justify-center">
@@ -20,12 +21,12 @@ function SignUp({ handleSubmitSignUp, handleNotRegistered }: SignUpProps) {
         <label className="flex flex-col gap-1 border-1 p-5 items-start">
           Organisation Name
           <input
-            disabled
-            name="org_name"
+            name="organisation_name"
             type="text"
-            value="7540c28c-0b16-4ec7-b65d-cdfc0d972c02" // Until I have everything set up.
+            value={organisation_sample_value} // Until I have everything set up.
+            readOnly
             className="bg-gray-200 hover:bg-gray-300 border-1 cursor-not-allowed"
-            aria-label="disabled rn"
+            aria-label="don't change right now"
           />
         </label>
         <label className="flex flex-col gap-1 border-1 p-5 items-start">

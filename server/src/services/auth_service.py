@@ -1,8 +1,8 @@
-from fastapi import HTTPException
+from fastapi import HTTPException, status
 from sqlalchemy import select
 from src.schemas import UserResponse, UserCreate
 
-from src.models import User
+from src.models import User, Organisation
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from pwdlib import PasswordHash, exceptions
@@ -24,40 +24,55 @@ async def checkIfUsernameExists():
     pass
 
 async def validateSignUp(
-        org_id: uuid.UUID,
+        org_name: str,
         email: str,
         password: str, 
         role: UserRole,
         session: AsyncSession,
 ) -> bool:
     try:
+        # Get the org_id.
+        result = await session.execute(
+            select(Organisation).where(Organisation.name==org_name)
+        )
+        current_organisation = result.scalar_one_or_none()
+
+        if current_organisation is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="The specified organisation does not exist."
+            )
+
         # Check if email is not already in the db for that org.
         result = await session.execute(
-            select(User).where(
+            select(User).join(
+                Organisation, 
+                User.organisation_id==Organisation.id
+                ).where(
                 User.email == email, 
-                User.organisation_id==org_id
+                User.organisation_id==Organisation.id
             )
         )
         user = result.scalar_one_or_none()
-
+            
         if user:
             raise HTTPException(
-                status_code=409,
+                status_code=status.HTTP_409_CONFLICT,
                 detail="Username already in use"
             )
 
         # Create a new user in the database.
         # For now adding every new user in same organisation.
-        password_hash = generate_hash(password)
+        password_hash = await generate_hash(password)
 
-        user = User(
+        new_user = User(
             email=email,
-            organisation_id=org_id,
+            organisation_id=current_organisation.id,
             password_hash=password_hash
         )
-        session.add(user)
+        session.add(new_user)
         await session.commit()
-        await session.refresh(user)
+        await session.refresh(new_user)
         return True
 
     except SQLAlchemyError as e:

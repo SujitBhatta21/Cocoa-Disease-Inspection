@@ -24,10 +24,14 @@ import jwt
 from jwt.exceptions import InvalidTokenError
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
+# to get a string like this run:
+# openssl rand -hex 32
+load_dotenv()
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = "HS256"
+
 
 logger = logging.getLogger("uvicorn.error")
-
-
 
 
 @router.post("/token")
@@ -107,8 +111,11 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
 
 @router.get("/current_user")
 async def get_user_data(
-    current_user: Annotated[User, Depends(
-        auth_service.get_current_user)],
-        session: SessionDependency,
-) -> User:
+    jwt_token: Annotated[str, Depends(auth_service.oauth2_scheme)],
+    session: SessionDependency,
+):
+    current_user = await auth_service.get_current_user(
+        token=jwt_token, 
+        session=session,
+    )
     return current_user

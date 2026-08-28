@@ -33,7 +33,7 @@ function SignUp({ handleSubmitSignUp, handleNotRegistered }: SignUpProps) {
           Username/Email
           <input
             required
-            name="email"
+            name="username"
             type="email"
             className="bg-gray-200 hover:bg-gray-300 border-1"
           />

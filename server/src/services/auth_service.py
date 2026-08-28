@@ -158,7 +158,7 @@ async def verify_hash_password(plain_password: str, hashed_password: str):
 
 
 ### PREVIOUS METHOD.
-async def get_user(session: AsyncSession, username) -> (User | None):
+async def get_user_by_email(session: AsyncSession, username) -> (User | None):
     if username is None:
         raise UNAUTHORISED_401_EXCEPTION
 
@@ -182,14 +182,14 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"}
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]) # type: ignore
         username = payload.get("sub")
         if username is None:
             raise credentials_exception
         token_data = TokenData(username=username)
     except jwt.InvalidTokenError:
         raise credentials_exception
-    user = get_user(session, username=token_data.username)
+    user = get_user_by_email(session, username=token_data.username)
     if user is None:
         raise credentials_exception
     return user

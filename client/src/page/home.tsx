@@ -1,10 +1,12 @@
 import { useState } from "react";
 import Login from "./login";
 import SignUp from "./signup";
+import { useNavigate } from "react-router-dom";
 
 function Home() {
   const VITE_SERVER_URL = import.meta.env.VITE_SERVER_URL;
   const [loginPage, setLoginPage] = useState(true);
+  let navigate = useNavigate();
 
   const handleSubmitLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -12,9 +14,13 @@ function Home() {
 
     const form = e.currentTarget;
     const formData = new FormData(form);
-    console.log(formData);
 
-    console.log(formData.get("email"));
+    console.log(
+      JSON.stringify({
+        email: formData.get("username"),
+        password: formData.get("password"),
+      }),
+    );
 
     const response = await fetch(`${VITE_SERVER_URL}/api/v1/auth/token`, {
       method: "POST",
@@ -27,6 +33,13 @@ function Home() {
       alert(`HTTP Error: ${response.status}: ${response.statusText}`);
       throw new Error(`HTTP Error: ${response.status}`);
     }
+
+    const data = await response.json();
+
+    console.log("data: ", data);
+    localStorage.setItem("access_token", data.access_token);
+
+    navigate("/upload");
   };
 
   const handleSubmitSignUp = async (e: React.FormEvent<HTMLFormElement>) => {

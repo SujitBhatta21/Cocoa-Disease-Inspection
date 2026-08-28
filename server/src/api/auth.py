@@ -1,33 +1,61 @@
+from datetime import datetime, timedelta, timezone
+
 import logging
-from fastapi import APIRouter, HTTPException, status
+from typing import Annotated
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from src.schemas import UserLogin, UserCreate
 import src.services.auth_service as auth_service
+from src.services.auth_service import Token, TokenData
 from src.db.session import SessionDependency
 
 from src.role import UserRole
-
+from src.models import User
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 logger = logging.getLogger("uvicorn.error")
 
 
-@router.post("/login")
+import os
+import logging
+from dotenv import load_dotenv
+
+import jwt
+from jwt.exceptions import InvalidTokenError
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+
+
+logger = logging.getLogger("uvicorn.error")
+
+
+
+
+@router.post("/token")
 async def login(
-        loginData: UserLogin,
+        loginData: Annotated[OAuth2PasswordRequestForm, Depends()],
         session: SessionDependency,
-    ):
+    ) -> Token:
     """Just login page that check """
-    logger.info(f"Login email check: {loginData.email}")
+    logger.info(f"Login email check: {loginData.username}")
 
-    isValid = await auth_service.validateLogin(loginData.email, loginData.password, session)
+    user = await auth_service.validateUserLogin(loginData.username, loginData.password, session)
 
-    if isValid:
-        logger.info(f"Login successful.")
-        return True
-    else:
+    if not user: 
         logger.info(f"Login not successful.")
-        return False   
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    logger.info(f"Login successful.")
+    access_token_expires = timedelta(minutes=auth_service.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.email}, expires_delta=access_token_expires
+    )
+    return Token(access_token=access_token, token_type="bearer")
+    
+
 
 
 @router.post("/signup")
@@ -58,3 +86,29 @@ async def signUp(
         return False   
 
 
+
+
+"""
+TOKEN OPERATIONS
+"""
+# Method reused from fastapi documentation.
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM) # type: ignore
+    return encoded_jwt
+
+
+
+@router.get("/current_user")
+async def get_user_data(
+    current_user: Annotated[User, Depends(
+        auth_service.get_current_user)],
+        session: SessionDependency,
+) -> User:
+    return current_user

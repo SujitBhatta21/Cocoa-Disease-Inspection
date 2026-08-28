@@ -1,4 +1,4 @@
-import { useState, type ButtonHTMLAttributes } from "react";
+import { useState } from "react";
 import Login from "./login";
 import SignUp from "./signup";
 
@@ -16,15 +16,9 @@ function Home() {
 
     console.log(formData.get("email"));
 
-    const response = await fetch(`${VITE_SERVER_URL}/api/v1/auth/login`, {
+    const response = await fetch(`${VITE_SERVER_URL}/api/v1/auth/token`, {
       method: "POST",
-      headers: {
-        "content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: formData.get("email"),
-        password: formData.get("password"),
-      }),
+      body: formData,
     });
 
     console.log("response is it true:", response.body);

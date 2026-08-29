@@ -1,12 +1,22 @@
-import { useState } from "react";
-import Login from "./login";
-import SignUp from "./signup";
+import { useEffect, useState } from "react";
+import Login from "../components/login";
+import SignUp from "../components/signup";
 import { useNavigate } from "react-router-dom";
+import LoggedIn from "../components/loggedIn";
 
 function Home() {
   const VITE_SERVER_URL = import.meta.env.VITE_SERVER_URL;
   const [loginPage, setLoginPage] = useState(true);
+  const [isToken, setIsToken] = useState(false);
+
   let navigate = useNavigate();
+
+  // Checking if token already consumed. If so calling home gives different page.
+  useEffect(() => {
+    if (localStorage.getItem("access_token") != null) {
+      setIsToken(true);
+    }
+  });
 
   const handleSubmitLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -76,11 +86,17 @@ function Home() {
     setLoginPage(!loginPage);
   };
 
+  const handleLogOut = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    // Endpoint to perform logout or something.
+    // It should clear/remove the token I guess.
+  };
+
   return (
     <div>
       <header className="text-2xl font-bold">App</header>
-
-      {loginPage ? (
+      {isToken ? (
+        <LoggedIn handleLogout={handleLogOut} />
+      ) : loginPage ? (
         <Login
           handleSubmitLogin={handleSubmitLogin}
           handleNotRegistered={handleNotRegistered}

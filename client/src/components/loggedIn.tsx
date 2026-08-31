@@ -1,8 +1,9 @@
 interface LoggedInProps {
   handleLogout: () => void;
+  handleGoBackToSession: () => void;
 }
 
-function LoggedIn({ handleLogout }: LoggedInProps) {
+function LoggedIn({ handleLogout, handleGoBackToSession }: LoggedInProps) {
   return (
     <main className="flex min-h-[calc(100svh-5rem)] items-center justify-center p-6">
       <section className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 text-center shadow-lg dark:border-gray-700 dark:bg-gray-900">
@@ -15,14 +16,22 @@ function LoggedIn({ handleLogout }: LoggedInProps) {
         <p className="mb-8 text-gray-600 dark:text-gray-300">
           Log out if you want to sign in with a different account.
         </p>
-
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="w-full cursor-pointer rounded-lg bg-red-500 px-5 py-3 font-semibold text-white transition-colors hover:bg-red-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
-        >
-          Log out
-        </button>
+        <div className="flex flex-col gap-5 m-5 p-4">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="w-full cursor-pointer rounded-lg bg-red-500 px-5 py-3 font-semibold text-white transition-colors hover:bg-red-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
+          >
+            Log out
+          </button>
+          <button
+            type="button"
+            onClick={handleGoBackToSession}
+            className="w-full cursor-pointer rounded-lg bg-blue-500 px-5 py-3 font-semibold text-white transition-colors hover:bg-blue-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
+          >
+            Go to session
+          </button>
+        </div>
       </section>
     </main>
   );

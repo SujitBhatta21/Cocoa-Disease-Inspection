@@ -3,17 +3,17 @@ import Login from "../components/login";
 import SignUp from "../components/signup";
 import { useNavigate } from "react-router-dom";
 import LoggedIn from "../components/loggedIn";
+import type { UserData } from "../types/auth";
 
 interface HomeProps {
   authenticated: boolean;
-  handleLogin: (accessToken: string) => Promise<boolean>;
+  handleLogin: (accessToken: string) => Promise<UserData | null>;
   handleLogout: () => void;
 }
 
 function Home({ authenticated, handleLogin, handleLogout }: HomeProps) {
   const VITE_SERVER_URL = import.meta.env.VITE_SERVER_URL;
   const [loginPage, setLoginPage] = useState(true);
-
   const navigate = useNavigate();
 
   const handleSubmitLogin = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -22,13 +22,6 @@ function Home({ authenticated, handleLogin, handleLogout }: HomeProps) {
 
     const form = e.currentTarget;
     const formData = new FormData(form);
-
-    console.log(
-      JSON.stringify({
-        email: formData.get("username"),
-        password: formData.get("password"),
-      }),
-    );
 
     const response = await fetch(`${VITE_SERVER_URL}/api/v1/auth/token`, {
       method: "POST",
@@ -44,10 +37,16 @@ function Home({ authenticated, handleLogin, handleLogout }: HomeProps) {
 
     const data = await response.json();
 
-    const authenticated = await handleLogin(data.access_token);
+    const loggedInUser = await handleLogin(data.access_token);
 
-    if (authenticated) {
-      navigate("/upload");
+    if (loggedInUser) {
+      if (loggedInUser.role === "user") {
+        navigate("/upload");
+      } else if (loggedInUser.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
     }
   };
 
@@ -85,11 +84,19 @@ function Home({ authenticated, handleLogin, handleLogout }: HomeProps) {
     setLoginPage(!loginPage);
   };
 
+  const handleGoBackToSession = async () => {
+    // Check first if it's logged in or not.
+    navigate("/upload");
+  };
+
   return (
     <div>
       <header className="text-2xl font-bold">App</header>
       {authenticated ? (
-        <LoggedIn handleLogout={handleLogout} />
+        <LoggedIn
+          handleLogout={handleLogout}
+          handleGoBackToSession={handleGoBackToSession}
+        />
       ) : loginPage ? (
         <Login
           handleSubmitLogin={handleSubmitLogin}

@@ -1,11 +1,21 @@
 import { Navigate } from "react-router-dom";
 
-function ProtectedRoute({ element }: { element: React.ReactElement }) {
-  const token = localStorage.getItem("access_token");
+export type AuthStatus = "checking" | "authenticated" | "unauthenticated";
 
-  if (!token) {
-    return <Navigate to="/" />;
+interface ProtectedRouteProps {
+  element: React.ReactElement;
+  authStatus: AuthStatus;
+}
+
+function ProtectedRoute({ element, authStatus }: ProtectedRouteProps) {
+  if (authStatus === "checking") {
+    return <p className="p-8 text-center">Checking your session...</p>;
   }
+
+  if (authStatus === "unauthenticated") {
+    return <Navigate to="/" replace />;
+  }
+
   return element;
 }
 

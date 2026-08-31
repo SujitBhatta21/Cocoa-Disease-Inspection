@@ -5,15 +5,23 @@ import type {
   BoundingBox,
   SubmissionData,
 } from "./page/upload";
+import type { UserData } from "./types/auth";
 
 interface FormProps {
   imageURL: string | null;
   metadata: InspectionResult | null;
   onSubmit: (data: SubmissionData) => Promise<void>;
   onClose: () => void;
+  currentUserData: UserData | null;
 }
 
-function Form({ imageURL, metadata, onSubmit, onClose }: FormProps) {
+function Form({
+  imageURL,
+  metadata,
+  onSubmit,
+  onClose,
+  currentUserData,
+}: FormProps) {
   console.log(metadata && metadata);
 
   // DECONSTRUCTING Layers of metadata.
@@ -135,11 +143,11 @@ function Form({ imageURL, metadata, onSubmit, onClose }: FormProps) {
               <dl className="divide-y divide-gray-200 text-sm text-gray-700 truncate">
                 <div className="flex justify-between gap-4 py-2">
                   <dt className="font-medium">Organisation ID</dt>
-                  <dd>&mdash;</dd>
+                  <dd>{currentUserData?.organisation_name ?? "—"}</dd>
                 </div>
                 <div className="flex justify-between gap-4 py-2">
-                  <dt className="font-medium">User ID</dt>
-                  <dd>&mdash;</dd>
+                  <dt className="font-medium">Username</dt>
+                  <dd>{currentUserData?.email ?? "—"}</dd>
                 </div>
 
                 <div

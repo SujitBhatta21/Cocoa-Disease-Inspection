@@ -1,22 +1,20 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Login from "../components/login";
 import SignUp from "../components/signup";
 import { useNavigate } from "react-router-dom";
 import LoggedIn from "../components/loggedIn";
 
-function Home() {
+interface HomeProps {
+  authenticated: boolean;
+  handleLogin: (accessToken: string) => Promise<boolean>;
+  handleLogout: () => void;
+}
+
+function Home({ authenticated, handleLogin, handleLogout }: HomeProps) {
   const VITE_SERVER_URL = import.meta.env.VITE_SERVER_URL;
   const [loginPage, setLoginPage] = useState(true);
-  const [isToken, setIsToken] = useState(false);
 
-  let navigate = useNavigate();
-
-  // Checking if token already consumed. If so calling home gives different page.
-  useEffect(() => {
-    if (localStorage.getItem("access_token") != null) {
-      setIsToken(true);
-    }
-  });
+  const navigate = useNavigate();
 
   const handleSubmitLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -46,10 +44,11 @@ function Home() {
 
     const data = await response.json();
 
-    console.log("data: ", data);
-    localStorage.setItem("access_token", data.access_token);
+    const authenticated = await handleLogin(data.access_token);
 
-    navigate("/upload");
+    if (authenticated) {
+      navigate("/upload");
+    }
   };
 
   const handleSubmitSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -86,16 +85,11 @@ function Home() {
     setLoginPage(!loginPage);
   };
 
-  const handleLogOut = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    // Endpoint to perform logout or something.
-    // It should clear/remove the token I guess.
-  };
-
   return (
     <div>
       <header className="text-2xl font-bold">App</header>
-      {isToken ? (
-        <LoggedIn handleLogout={handleLogOut} />
+      {authenticated ? (
+        <LoggedIn handleLogout={handleLogout} />
       ) : loginPage ? (
         <Login
           handleSubmitLogin={handleSubmitLogin}

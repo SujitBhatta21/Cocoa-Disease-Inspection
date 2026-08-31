@@ -1,6 +1,7 @@
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import { FaArrowDown } from "react-icons/fa";
 import Form from "../Form";
+import type { UserData } from "../types/auth";
 
 export interface BoundingBox {
   x1: number;
@@ -28,7 +29,12 @@ export interface SubmissionData {
   corrected_label: string | null;
 }
 
-function UploadPage() {
+interface UploadPageProps {
+  handleLogout: () => void;
+  currentUser: UserData | null;
+}
+
+function UploadPage({ handleLogout, currentUser }: UploadPageProps) {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -119,80 +125,94 @@ function UploadPage() {
   };
 
   return (
-    <div className="flex flex-col items-center gap-4 p-24">
-      {/* Hidden file input strictly filtering for images */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        accept="image/*"
-        style={{ display: "none" }}
-      />
+    <main>
+      <header className="flex justify-end p-4 sm:p-6">
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="cursor-pointer rounded-lg bg-red-500 px-4 py-2 font-semibold text-white transition-colors hover:bg-red-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500"
+        >
+          Log out
+        </button>
+      </header>
+      <div className="flex flex-col items-center gap-4 p-24">
+        {/* Hidden file input strictly filtering for images */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept="image/*"
+          style={{ display: "none" }}
+        />
 
-      {previewUrl ? <h1>Image uploaded </h1> : <h1>Upload an image</h1>}
-      {
-        <p className="py-4">
-          # For reliable result, upload one clearly visible cocoa leaf per
-          image.
-        </p>
-      }
+        {previewUrl ? <h1>Image uploaded </h1> : <h1>Upload an image</h1>}
+        {
+          <p className="py-4">
+            # For reliable result, upload one clearly visible cocoa leaf per
+            image.
+          </p>
+        }
 
-      {/* Trigger Button Uploading */}
-      <button
-        aria-label="Upload Button"
-        onClick={handleUploadButtonClick}
-        className="px-5 py-2.5 mb-10 bg-[#0070f3] text-white border-none cursor-pointer font-bold"
-      >
-        +
-      </button>
+        {/* Trigger Button Uploading */}
+        <button
+          aria-label="Upload Button"
+          onClick={handleUploadButtonClick}
+          className="px-5 py-2.5 mb-10 bg-[#0070f3] text-white border-none cursor-pointer font-bold"
+        >
+          +
+        </button>
 
-      {previewUrl && <FaArrowDown className="mx-auto my-5" />}
+        {previewUrl && <FaArrowDown className="mx-auto my-5" />}
 
-      {/* Preview Display */}
-      {previewUrl && (
-        <div className="mx-auto w-fit rounded-lg border border-dotted p-4">
-          <div className="flex flex-col items-center">
-            {/* Image */}
-            <img
-              src={previewUrl}
-              alt="Preview"
-              className="max-h-[300px] max-w-[300px] rounded-lg"
-            />
+        {/* Preview Display */}
+        {previewUrl && (
+          <div className="mx-auto w-fit rounded-lg border border-dotted p-4">
+            <div className="flex flex-col items-center">
+              {/* Image */}
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="max-h-[300px] max-w-[300px] rounded-lg"
+              />
 
-            {/* Preview heading + filename */}
-            <div className="mt-2 flex flex-row items-center justify-center gap-2">
-              <h3>PREVIEW</h3>
+              {/* Preview heading + filename */}
+              <div className="mt-2 flex flex-row items-center justify-center gap-2">
+                <h3>PREVIEW</h3>
 
-              {selectedImage && (
-                <p className="text-sm text-gray-600">({selectedImage.name})</p>
-              )}
+                {selectedImage && (
+                  <p className="text-sm text-gray-600">
+                    ({selectedImage.name})
+                  </p>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {previewUrl && (
-        <div>
-          <form onSubmit={handleAnalyseSubmit}>
-            <button
-              className="p-3 m-3.5 bg-[green] text-white border-10 border-[black] cursor-pointer"
-              type="submit"
-            >
-              ANALYSE
-            </button>
-          </form>
-        </div>
-      )}
+        {previewUrl && (
+          <div>
+            <form onSubmit={handleAnalyseSubmit}>
+              <button
+                className="p-3 m-3.5 bg-[green] text-white border-10 border-[black] cursor-pointer"
+                type="submit"
+              >
+                ANALYSE
+              </button>
+            </form>
+          </div>
+        )}
 
-      {openForm && (
-        <Form
-          imageURL={previewUrl}
-          metadata={inspectResult}
-          onSubmit={handleFormSubmit}
-          onClose={onFormClose}
-        />
-      )}
-    </div>
+        {openForm && (
+          <Form
+            imageURL={previewUrl}
+            metadata={inspectResult}
+            onSubmit={handleFormSubmit}
+            onClose={onFormClose}
+            currentUserData={currentUser}
+          />
+        )}
+      </div>
+    </main>
   );
 }
 

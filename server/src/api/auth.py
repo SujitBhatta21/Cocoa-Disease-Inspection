@@ -4,7 +4,7 @@ import logging
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from src.schemas import UserLogin, UserCreate
+from src.schemas import UserLogin, UserCreate, UserResponse
 import src.services.auth_service as auth_service
 from src.services.auth_service import Token, TokenData
 from src.db.session import SessionDependency
@@ -113,9 +113,33 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
 async def get_user_data(
     jwt_token: Annotated[str, Depends(auth_service.oauth2_scheme)],
     session: SessionDependency,
-):
+) -> UserResponse:
     current_user = await auth_service.get_current_user(
         token=jwt_token, 
         session=session,
     )
-    return current_user
+
+    organisation_name = await auth_service.get_org_name(
+        organisation_id=current_user.organisation_id,
+        session=session,
+    )
+
+    if not organisation_name: 
+        logger.info(f"ORGANISATION Name is None.")
+        raise HTTPException(
+            status_code=status.HTTP_204_NO_CONTENT,
+            detail="No organisation name",
+    )
+
+    logger.info(f"Organisation_name: {organisation_name}")
+
+    userResponse = UserResponse(
+        id=current_user.id,
+        email=current_user.email,
+        organisation_name=organisation_name,
+        role=current_user.role,
+        created_at=current_user.created_at,
+    )
+
+    return userResponse
+

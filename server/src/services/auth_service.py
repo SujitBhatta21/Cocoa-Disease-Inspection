@@ -102,7 +102,7 @@ async def validateSignUp(
 
         # Create a new user in the database.
         # For now adding every new user in same organisation.
-        password_hash = await generate_hash(password)
+        password_hash = generate_hash(password)
 
         new_user = User(
             email=email,
@@ -149,10 +149,10 @@ async def validateUserLogin(
 
 
 
-async def generate_hash(string: str) -> str:
+def generate_hash(string: str) -> str:
     return password_hash.hash(string)
 
-async def verify_hash_password(plain_password: str, hashed_password: str):
+def verify_hash_password(plain_password: str, hashed_password: str) -> bool:
     return password_hash.verify(plain_password, hashed_password)
 
 
@@ -189,10 +189,27 @@ async def get_current_user(
         token_data = TokenData(username=username)
     except jwt.InvalidTokenError:
         raise credentials_exception
-    user = get_user_by_email(session, username=token_data.username)
+    user = await get_user_by_email(session, username=token_data.username)
     if user is None:
         raise credentials_exception
     return user
+
+
+
+async def get_org_name(
+        organisation_id,
+        session: AsyncSession
+    ) -> str | None:
+    if organisation_id is None:
+        raise UNAUTHORISED_401_EXCEPTION
+
+    result = await session.execute(
+        select(Organisation).where(Organisation.id==organisation_id)
+    )
+    org = result.scalar_one_or_none()
+    if org is not None:
+        return org.name
+    return
 
 """
 FROM THE JWT FASTAPI DOCS.

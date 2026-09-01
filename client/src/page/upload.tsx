@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { FaArrowDown } from "react-icons/fa";
-import Form from "../Form";
+import Form from "../components/Form";
 import type { UserData } from "../types/auth";
 
 export interface BoundingBox {

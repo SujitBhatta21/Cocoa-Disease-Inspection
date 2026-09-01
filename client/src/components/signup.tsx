@@ -23,9 +23,8 @@ function SignUp({ handleSubmitSignUp, handleNotRegistered }: SignUpProps) {
           <input
             name="organisation_name"
             type="text"
-            value={organisation_sample_value} // Until I have everything set up.
-            readOnly
-            className="bg-gray-200 hover:bg-gray-300 border-1 cursor-not-allowed pl-1"
+            defaultValue="Dummy_org"
+            className="bg-gray-200 hover:bg-gray-300 border-1 pl-1"
             aria-label="don't change right now"
           />
         </label>

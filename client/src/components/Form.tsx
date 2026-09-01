@@ -4,8 +4,8 @@ import type {
   InspectionResult,
   BoundingBox,
   SubmissionData,
-} from "./page/upload";
-import type { UserData } from "./types/auth";
+} from "../page/upload";
+import type { UserData } from "../types/auth";
 
 interface FormProps {
   imageURL: string | null;

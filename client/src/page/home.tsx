@@ -79,7 +79,8 @@ function Home({ authenticated, handleLogin, handleLogout }: HomeProps) {
       );
     } else {
       console.log("GOT FROM BACKEND: ", data);
-      setLoginPage(true);
+      alert("Sign Up Successful. Wait for admin approval.");
+      setLoginPage(!loginPage);
     }
   };
 

@@ -79,7 +79,7 @@ async def validateSignUp(
         if current_organisation is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="The specified organisation does not exist."
+                detail="Given oganisation does not exist in our database."
             )
 
         # Check if email is not already in the db for that org.

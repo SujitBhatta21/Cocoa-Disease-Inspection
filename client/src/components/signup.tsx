@@ -23,9 +23,8 @@ function SignUp({ handleSubmitSignUp, handleNotRegistered }: SignUpProps) {
           <input
             name="organisation_name"
             type="text"
-            value={organisation_sample_value} // Until I have everything set up.
-            readOnly
-            className="bg-gray-200 hover:bg-gray-300 border-1 cursor-not-allowed"
+            defaultValue="Dummy_org"
+            className="bg-gray-200 hover:bg-gray-300 border-1 pl-1"
             aria-label="don't change right now"
           />
         </label>
@@ -33,9 +32,9 @@ function SignUp({ handleSubmitSignUp, handleNotRegistered }: SignUpProps) {
           Username/Email
           <input
             required
-            name="email"
+            name="username"
             type="email"
-            className="bg-gray-200 hover:bg-gray-300 border-1"
+            className="bg-gray-200 hover:bg-gray-300 border-1 pl-1"
           />
         </label>
         <label className="flex flex-col gap-1 border-1 p-5 items-start">
@@ -44,7 +43,7 @@ function SignUp({ handleSubmitSignUp, handleNotRegistered }: SignUpProps) {
             required
             name="password"
             type="password"
-            className="bg-gray-200 hover:bg-gray-300 border-1"
+            className="bg-gray-200 hover:bg-gray-300 border-1 pl-1"
           />
         </label>
 

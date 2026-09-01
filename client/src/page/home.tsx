@@ -1,10 +1,20 @@
-import { useState, type ButtonHTMLAttributes } from "react";
-import Login from "./login";
-import SignUp from "./signup";
+import { useState } from "react";
+import Login from "../components/login";
+import SignUp from "../components/signup";
+import { useNavigate } from "react-router-dom";
+import LoggedIn from "../components/loggedIn";
+import type { UserData } from "../types/auth";
 
-function Home() {
+interface HomeProps {
+  authenticated: boolean;
+  handleLogin: (accessToken: string) => Promise<UserData | null>;
+  handleLogout: () => void;
+}
+
+function Home({ authenticated, handleLogin, handleLogout }: HomeProps) {
   const VITE_SERVER_URL = import.meta.env.VITE_SERVER_URL;
   const [loginPage, setLoginPage] = useState(true);
+  const navigate = useNavigate();
 
   const handleSubmitLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -12,19 +22,10 @@ function Home() {
 
     const form = e.currentTarget;
     const formData = new FormData(form);
-    console.log(formData);
 
-    console.log(formData.get("email"));
-
-    const response = await fetch(`${VITE_SERVER_URL}/api/v1/auth/login`, {
+    const response = await fetch(`${VITE_SERVER_URL}/api/v1/auth/token`, {
       method: "POST",
-      headers: {
-        "content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: formData.get("email"),
-        password: formData.get("password"),
-      }),
+      body: formData,
     });
 
     console.log("response is it true:", response.body);
@@ -32,6 +33,20 @@ function Home() {
     if (!response.ok) {
       alert(`HTTP Error: ${response.status}: ${response.statusText}`);
       throw new Error(`HTTP Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    const loggedInUser = await handleLogin(data.access_token);
+
+    if (loggedInUser) {
+      if (loggedInUser.role === "user") {
+        navigate("/upload");
+      } else if (loggedInUser.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
     }
   };
 
@@ -47,18 +62,26 @@ function Home() {
       },
       body: JSON.stringify({
         organisation_name: formData.get("organisation_name"),
-        email: formData.get("email"),
+        email: formData.get("username"),
         password: formData.get("password"),
         role: formData.get("role"),
       }),
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
+      alert(
+        `Error: ${response.status ? `${response.status} (${response.statusText}) : ${data.detail}` : "Something went wrong"}`,
+      );
       console.log(
         `RESPONSE Status: ${response.status}: ${response.statusText}`,
       );
+    } else {
+      console.log("GOT FROM BACKEND: ", data);
+      alert("Sign Up Successful. Wait for admin approval.");
+      setLoginPage(!loginPage);
     }
-    console.log("GOT FROM BACKEND: ", response.body);
   };
 
   const handleNotRegistered = async (
@@ -69,11 +92,20 @@ function Home() {
     setLoginPage(!loginPage);
   };
 
+  const handleGoBackToSession = async () => {
+    // Check first if it's logged in or not.
+    navigate("/upload");
+  };
+
   return (
     <div>
       <header className="text-2xl font-bold">App</header>
-
-      {loginPage ? (
+      {authenticated ? (
+        <LoggedIn
+          handleLogout={handleLogout}
+          handleGoBackToSession={handleGoBackToSession}
+        />
+      ) : loginPage ? (
         <Login
           handleSubmitLogin={handleSubmitLogin}
           handleNotRegistered={handleNotRegistered}

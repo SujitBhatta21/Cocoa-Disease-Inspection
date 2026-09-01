@@ -9,16 +9,14 @@ dependencies = [
     "sqlalchemy>=2.0.51",
     "asyncpg>=0.31.0",              # NEEDED FOR POSTGRES
     "greenlet>=3.5.4",              # NEEDED FOR ASYNC SUPPORT FOR sqlalchemy
-
     # ONNX Inference Libraries (ML)
     "onnx==1.22.0",
     "onnxruntime==1.28.0",
     "pillow==12.3.0",
-
     # Azure SDK Libraries
     "azure-identity>=1.15.0",
     "azure-storage-blob>=12.19.0",
-
     # For password_hash
     "pwdlib[argon2]>=0.3.1",
+    "pyjwt>=2.13.0",
 ]

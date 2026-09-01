@@ -1,5 +1,5 @@
 """Persist confirmed cocoa inspections."""
-
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
@@ -12,10 +12,13 @@ from src.models import Inspection, User
 from src.schemas import InspectResponse
 from src.services.storage_service import upload_blob_image
 
+from src.services.auth_service import get_current_user, oauth2_scheme, get_org_name
+
 
 router = APIRouter(prefix="/submission", tags=["submission"])
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png"}
-SEED_USER_EMAIL = "dummy@gmail.com"
+logger = logging.getLogger("uvicorn.error")
+SEED_USER_EMAIL = "dummy@gmail.com" # I need to get current user cookie token.
 
 
 @router.post("", response_model=InspectResponse, status_code=status.HTTP_201_CREATED)
@@ -25,6 +28,7 @@ async def create_inspection(
     confidence: Annotated[float, Form()],
     human_corrected: Annotated[bool, Form()],
     session: SessionDependency,
+    jwt_token: Annotated[str, Depends(oauth2_scheme)],
     corrected_label: Annotated[str | None, Form()] = None,
 ) -> Inspection:
     if image.content_type not in ALLOWED_IMAGE_TYPES:
@@ -33,16 +37,32 @@ async def create_inspection(
             detail="Upload a JPEG or PNG image.",
         )
 
-    result = await session.execute(
-        select(User).where(User.email == SEED_USER_EMAIL)
+    # 1. Getting current user details.
+    current_user = await get_current_user(
+        token=jwt_token,
+        session=session,
     )
-    user = result.scalar_one_or_none()
-    if user is None:
+
+    logger.info(f"TESTING Backend Submission server: {current_user.email}")
+
+    if current_user is None:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="The seeded submission user does not exist.",
         )
 
+    # 2. Get organisation detail for CONTAINER_NAME.
+    organisation_name = await get_org_name(
+        organisation_id=current_user.organisation_id, 
+        session=session,
+    )
+    safe_organisation_name = str(organisation_name).lower().replace("_", "-").replace(" ", "-")
+
+    # 3. Setting the container name. If N/A create one else append.
+    CONTAINER_NAME = f"{safe_organisation_name}-{str(current_user.organisation_id)[:5]}"
+
+    logger.info(f"TESTING container_name inside submission: {CONTAINER_NAME}")
+    
     if human_corrected and not corrected_label:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -50,7 +70,7 @@ async def create_inspection(
         )
 
     image_bytes = await image.read()
-    blob_url = upload_blob_image(image_bytes, image.filename)
+    blob_url = upload_blob_image(image_bytes, image.filename, container_name=CONTAINER_NAME)
     if not blob_url:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -58,7 +78,7 @@ async def create_inspection(
         )
 
     inspection = Inspection(
-        user_id=user.id,
+        user_id=current_user.id,
         image_url=blob_url,
         prediction=prediction,
         confidence=confidence,

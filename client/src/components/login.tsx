@@ -17,9 +17,9 @@ function Login({ handleSubmitLogin, handleNotRegistered }: LoginProps) {
           Username/Email
           <input
             required
-            name="email"
+            name="username"
             type="email"
-            className="bg-gray-200 hover:bg-gray-300 border-1"
+            className="bg-gray-200 hover:bg-gray-300 border-1 pl-1"
           />
         </label>
         <label className="flex flex-col gap-1 border-1 p-5 items-start">
@@ -28,7 +28,7 @@ function Login({ handleSubmitLogin, handleNotRegistered }: LoginProps) {
             required
             name="password"
             type="password"
-            className="bg-gray-200 hover:bg-gray-300 border-1"
+            className="bg-gray-200 hover:bg-gray-300 border-1 pl-1"
           />
         </label>
 

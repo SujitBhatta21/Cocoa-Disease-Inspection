@@ -62,18 +62,25 @@ function Home({ authenticated, handleLogin, handleLogout }: HomeProps) {
       },
       body: JSON.stringify({
         organisation_name: formData.get("organisation_name"),
-        email: formData.get("email"),
+        email: formData.get("username"),
         password: formData.get("password"),
         role: formData.get("role"),
       }),
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
+      alert(
+        `Error: ${response.status ? `${response.status} (${response.statusText}) : ${data.detail}` : "Something went wrong"}`,
+      );
       console.log(
         `RESPONSE Status: ${response.status}: ${response.statusText}`,
       );
+    } else {
+      console.log("GOT FROM BACKEND: ", data);
+      setLoginPage(true);
     }
-    console.log("GOT FROM BACKEND: ", response.body);
   };
 
   const handleNotRegistered = async (

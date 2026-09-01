@@ -16,36 +16,39 @@ function App() {
   );
   const [currentUser, setCurrentUser] = useState<UserData | null>(null);
 
-  const loadProfile = useCallback(async (token: string): Promise<UserData | null> => {
-    try {
-      const response = await fetch(
-        `${VITE_SERVER_URL}/api/v1/auth/current_user`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
+  const loadProfile = useCallback(
+    async (token: string): Promise<UserData | null> => {
+      try {
+        const response = await fetch(
+          `${VITE_SERVER_URL}/api/v1/auth/current_user`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           },
-        },
-      );
+        );
 
-      if (!response.ok) {
-        localStorage.removeItem("access_token");
+        if (!response.ok) {
+          localStorage.removeItem("access_token");
+          setCurrentUser(null);
+          setAuthStatus("unauthenticated");
+          return null;
+        } else {
+          const data: UserData = await response.json();
+          setCurrentUser(data);
+          setAuthStatus("authenticated");
+          return data;
+        }
+      } catch (err) {
+        console.error("Unable to validate the current session:", err);
         setCurrentUser(null);
         setAuthStatus("unauthenticated");
         return null;
-      } else {
-        const data: UserData = await response.json();
-        setCurrentUser(data);
-        setAuthStatus("authenticated");
-        return data;
       }
-    } catch (err) {
-      console.error("Unable to validate the current session:", err);
-      setCurrentUser(null);
-      setAuthStatus("unauthenticated");
-      return null;
-    }
-  }, []);
+    },
+    [],
+  );
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
@@ -102,7 +105,7 @@ function App() {
           element={
             <ProtectedRoute
               authStatus={authStatus}
-              element={<Admin />}
+              element={<Admin handleLogout={handleLogout} />}
               userRole={currentUser?.role}
               requiredRole="admin"
             />

@@ -25,7 +25,7 @@ function SignUp({ handleSubmitSignUp, handleNotRegistered }: SignUpProps) {
             type="text"
             value={organisation_sample_value} // Until I have everything set up.
             readOnly
-            className="bg-gray-200 hover:bg-gray-300 border-1 cursor-not-allowed"
+            className="bg-gray-200 hover:bg-gray-300 border-1 cursor-not-allowed pl-1"
             aria-label="don't change right now"
           />
         </label>
@@ -35,7 +35,7 @@ function SignUp({ handleSubmitSignUp, handleNotRegistered }: SignUpProps) {
             required
             name="username"
             type="email"
-            className="bg-gray-200 hover:bg-gray-300 border-1"
+            className="bg-gray-200 hover:bg-gray-300 border-1 pl-1"
           />
         </label>
         <label className="flex flex-col gap-1 border-1 p-5 items-start">
@@ -44,7 +44,7 @@ function SignUp({ handleSubmitSignUp, handleNotRegistered }: SignUpProps) {
             required
             name="password"
             type="password"
-            className="bg-gray-200 hover:bg-gray-300 border-1"
+            className="bg-gray-200 hover:bg-gray-300 border-1 pl-1"
           />
         </label>
 

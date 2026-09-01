@@ -107,7 +107,8 @@ async def validateSignUp(
         new_user = User(
             email=email,
             organisation_id=current_organisation.id,
-            password_hash=password_hash
+            password_hash=password_hash,
+            role=role
         )
         session.add(new_user)
         await session.commit()

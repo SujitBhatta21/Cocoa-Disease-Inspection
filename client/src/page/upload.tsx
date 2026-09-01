@@ -108,6 +108,9 @@ function UploadPage({ handleLogout, currentUser }: UploadPageProps) {
 
     const response = await fetch(`${VITE_SERVER_URL}/api/v1/submission`, {
       method: "POST",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+      },
       body: formData,
     });
 

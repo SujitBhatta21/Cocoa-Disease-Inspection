@@ -31,9 +31,6 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 
 
-logger = logging.getLogger("uvicorn.error")
-
-
 @router.post("/token")
 async def login(
         loginData: Annotated[OAuth2PasswordRequestForm, Depends()],

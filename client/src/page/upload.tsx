@@ -121,6 +121,7 @@ function UploadPage({ handleLogout, currentUser }: UploadPageProps) {
 
     await response.json();
     setOpenForm(false);
+    setPreviewUrl(null);
   };
 
   const onFormClose = async () => {

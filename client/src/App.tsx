@@ -29,13 +29,15 @@ function App() {
           },
         );
 
+        const data = await response.json();
+
         if (!response.ok) {
           localStorage.removeItem("access_token");
           setCurrentUser(null);
           setAuthStatus("unauthenticated");
+          console.log("Token Expired: ", data.detail);
           return null;
         } else {
-          const data: UserData = await response.json();
           setCurrentUser(data);
           setAuthStatus("authenticated");
           return data;

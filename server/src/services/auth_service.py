@@ -211,17 +211,3 @@ async def get_org_name(
     if org is not None:
         return org.name
     return
-
-"""
-FROM THE JWT FASTAPI DOCS.
-Not needed rn cause I don't have is_active attribute for User BaseModel and schema.
-"""
-# async def get_current_active_user(
-#         current_user: Annotated[User, Depends(get_current_user)]
-# ):
-#     if current_user.is_active:
-#         raise HTTPException(
-#             status_code=status.HTTP_400_BAD_REQUEST,
-#             detail="Inactive User"
-#         )
-#     return current_user

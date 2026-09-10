@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 interface LoginProps {
   handleSubmitLogin: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
   handleNotRegistered: (
@@ -6,6 +8,11 @@ interface LoginProps {
 }
 
 function Login({ handleSubmitLogin, handleNotRegistered }: LoginProps) {
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const handleShowPassword = () => {
+    setIsPasswordVisible(!isPasswordVisible);
+  };
+
   return (
     <div className="border-2 min-h-screen flex flex-col items-center justify-center">
       <form
@@ -27,9 +34,18 @@ function Login({ handleSubmitLogin, handleNotRegistered }: LoginProps) {
           <input
             required
             name="password"
-            type="password"
+            type={isPasswordVisible ? "text" : "password"}
             className="bg-gray-200 hover:bg-gray-300 border-1 pl-1"
           />
+          <div className="flex flex-row items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              id="show-password"
+              onChange={handleShowPassword}
+              className="cursor-pointer"
+            />
+            <label className="cursor-pointer select-none">Show Password</label>
+          </div>
         </label>
 
         <button

@@ -122,6 +122,7 @@ function UploadPage({ handleLogout, currentUser }: UploadPageProps) {
     await response.json();
     setOpenForm(false);
     setPreviewUrl(null);
+    alert("INSPECTION Data submitted and saved.");
   };
 
   const onFormClose = async () => {

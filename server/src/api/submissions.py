@@ -12,7 +12,7 @@ from src.models import Inspection, User
 from src.schemas import InspectResponse
 from src.services.storage_service import upload_blob_image
 
-from src.services.auth_service import get_current_user, oauth2_scheme, get_org_name
+from src.services.auth_service import get_current_user, oauth2_scheme, get_org_name, get_all_inspections_by_org
 
 
 router = APIRouter(prefix="/submission", tags=["submission"])
@@ -92,15 +92,16 @@ async def create_inspection(
     return inspection
 
 
-@router.get("/retrieve_inspections", response_model=list[InspectResponse])
-async def get_all_inspections(
+@router.get("/retrieve_org_inspections", response_model=list[InspectResponse])
+async def get_all_inspections_for_org(
+    jwt_token: Annotated[str, Depends(oauth2_scheme)],
     session: SessionDependency
     ):
-    all_inspections = await session.execute(
-        select(Inspection)
-    )
-    all_inspections = all_inspections.scalars().all()
-    return all_inspections
+    # Get organisation id for this admin user using the jwt_token.
+    all_inspections_org = await get_all_inspections_by_org(jwt_token, session)
+
+    return all_inspections_org
+
 
 
 """

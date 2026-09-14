@@ -8,7 +8,7 @@ import jwt
 from pydantic import BaseModel
 from sqlalchemy import select
 
-from src.models import User, Organisation
+from src.models import User, Organisation, Inspection
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from pwdlib import PasswordHash
@@ -196,7 +196,6 @@ async def get_current_user(
     return user
 
 
-
 async def get_org_name(
         organisation_id,
         session: AsyncSession
@@ -211,3 +210,27 @@ async def get_org_name(
     if org is not None:
         return org.name
     return
+
+
+"""
+Takes token breaks the token then gets organisation name to get all it's inspections.
+"""
+async def get_all_inspections_by_org(
+        jwt_token: Annotated[str, Depends(oauth2_scheme)],
+        session: AsyncSession
+):
+    curr_user = await get_current_user(token=jwt_token, session=session)
+
+    # Verifying whether this is an admin.
+    if curr_user.role is not UserRole.ADMIN:
+        return UNAUTHORISED_401_EXCEPTION
+
+    result = await session.execute(
+        select(Inspection).join(
+            User, User.id == Inspection.user_id
+        ).where(
+            User.organisation_id==curr_user.organisation_id
+        )
+    )
+    all_inspections = result.scalars().all()
+    return all_inspections

@@ -9,7 +9,6 @@ interface SignUpProps {
 
 function SignUp({ handleSubmitSignUp, handleNotRegistered }: SignUpProps) {
   const [selectedRole, setSelectedRole] = useState("user");
-  const organisation_sample_value = "Dummy_org";
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const handleShowPassword = () => {
     setIsPasswordVisible(!isPasswordVisible);
@@ -60,19 +59,7 @@ function SignUp({ handleSubmitSignUp, handleNotRegistered }: SignUpProps) {
           </div>
         </label>
 
-        <label className="">
-          ROLE:
-          <select
-            name="role"
-            value={selectedRole}
-            onChange={(event) => setSelectedRole(event.target.value)}
-            required
-            className="border-3"
-          >
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
-          </select>
-        </label>
+        <label className="">ROLE: USER</label>
 
         <button
           className="bg-green-400 gap-3 hover:bg-green-500 text-black cursor-pointer"

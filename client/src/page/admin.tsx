@@ -6,12 +6,14 @@ AALC-project repo: https://github.com/SujitBhatta21/AALC-IndividualProject
 */
 
 import { useEffect, useMemo, useState } from "react";
+import InspectionView from "../components/admin/InspectionView";
+import SignUpApproval from "../components/admin/SignUpApproval";
 
 interface AdminProps {
   handleLogout: () => void;
 }
 
-interface Inspection {
+export interface Inspection {
   id: string;
   user_id: string;
   image_url: string;
@@ -22,7 +24,7 @@ interface Inspection {
   created_at: string;
 }
 
-type DashboardView = "inspections" | "signup";
+type DashboardView = "inspections" | "signup" | "createAdmin";
 
 function Admin({ handleLogout }: AdminProps) {
   const VITE_SERVER_URL = import.meta.env.VITE_SERVER_URL;
@@ -30,12 +32,13 @@ function Admin({ handleLogout }: AdminProps) {
   const [inspections, setInspections] = useState<Inspection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  let viewContent;
 
   useEffect(() => {
     const loadInspections = async () => {
       try {
         const response = await fetch(
-          `${VITE_SERVER_URL}/api/v1/submission/retrieve_inspections`,
+          `${VITE_SERVER_URL}/api/v1/submission/retrieve_org_inspections`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("access_token")}`,
@@ -96,6 +99,20 @@ function Admin({ handleLogout }: AdminProps) {
     URL.revokeObjectURL(url);
   };
 
+  if (view === "inspections") {
+    viewContent = (
+      <InspectionView
+        inspections={inspections}
+        loading={loading}
+        error={error}
+      />
+    );
+  } else if (view === "signup") {
+    viewContent = <SignUpApproval />;
+  } else {
+    viewContent = null;
+  }
+
   return (
     <main className="min-h-screen bg-stone-50 text-left text-slate-900 dark:bg-gray-950 dark:text-gray-100">
       <header className="flex flex-col gap-4 border-b border-stone-200 bg-white px-6 py-5 sm:flex-row sm:items-center sm:justify-between dark:border-gray-800 dark:bg-gray-900">
@@ -140,6 +157,13 @@ function Admin({ handleLogout }: AdminProps) {
           >
             Sign Up approvals
           </button>
+          <button
+            type="button"
+            onClick={() => setView("createAdmin")}
+            className={`cursor-pointer rounded-lg px-4 py-3 text-left font-semibold ${view === "createAdmin" ? "bg-emerald-700 text-white" : "hover:bg-stone-100 dark:hover:bg-gray-800"}`}
+          >
+            Create Admin (+)
+          </button>
         </nav>
 
         <section className="min-w-0">
@@ -149,84 +173,7 @@ function Admin({ handleLogout }: AdminProps) {
             <SummaryCard label="Pending users" value="-" />
           </div>
 
-          {view === "signup" ? (
-            <div className="rounded-xl border border-stone-200 bg-white p-8 dark:border-gray-800 dark:bg-gray-900">
-              <h2 className="mb-2 text-xl font-bold">
-                Pending Sign Up approvals
-              </h2>
-              <p className="max-w-2xl text-slate-600 dark:text-gray-400">
-                This section is ready for the approval workflow. Add a user
-                status field and an admin users endpoint before enabling approve
-                and reject actions.
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-hidden rounded-xl border border-stone-200 bg-white dark:border-gray-800 dark:bg-gray-900">
-              <div className="border-b border-stone-200 px-5 py-4 dark:border-gray-800">
-                <h2 className="m-0 text-xl font-bold">Inspection review</h2>
-              </div>
-              {loading ? (
-                <p className="p-8 text-center">Loading inspections…</p>
-              ) : error ? (
-                <p className="p-8 text-center text-red-600">{error}</p>
-              ) : inspections.length === 0 ? (
-                <p className="p-8 text-center">
-                  No inspections have been submitted.
-                </p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse text-sm">
-                    <thead className="bg-stone-100 dark:bg-gray-800">
-                      <tr>
-                        <th className="p-3 text-left">Image</th>
-                        <th className="p-3 text-left">Final label</th>
-                        <th className="p-3 text-left">Confidence</th>
-                        <th className="p-3 text-left">Reviewed</th>
-                        <th className="p-3 text-left">Submitted</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {inspections.map((inspection) => (
-                        <tr
-                          key={inspection.id}
-                          className="border-t border-stone-200 dark:border-gray-800"
-                        >
-                          <td className="p-3">
-                            <a
-                              href={inspection.image_url}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              <img
-                                src={inspection.image_url}
-                                alt={`Inspection classified as ${inspection.prediction}`}
-                                className="h-14 w-14 rounded-lg object-cover"
-                              />
-                            </a>
-                          </td>
-                          <td className="p-3 font-semibold">
-                            {inspection.corrected_label ??
-                              inspection.prediction}
-                          </td>
-                          <td className="p-3">
-                            {Math.round(inspection.confidence * 100)}%
-                          </td>
-                          <td className="p-3">
-                            {inspection.human_corrected ? "Yes" : "No"}
-                          </td>
-                          <td className="p-3 whitespace-nowrap">
-                            {new Date(
-                              inspection.created_at,
-                            ).toLocaleDateString()}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
+          {viewContent}
         </section>
       </div>
     </main>

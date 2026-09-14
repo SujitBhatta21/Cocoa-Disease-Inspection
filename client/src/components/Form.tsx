@@ -7,6 +7,8 @@ import type {
 } from "../page/upload";
 import type { UserData } from "../types/auth";
 
+const MANUAL_CORRECTION_THRESHOLD = 0.5;
+
 interface FormProps {
   imageURL: string | null;
   metadata: InspectionResult | null;
@@ -33,8 +35,10 @@ function Form({
     (detection) => detection.confidence == highest_confidence,
   );
 
-  const needManualPred = highest_confidence <= 0.5;
+  const needManualPred = highest_confidence < MANUAL_CORRECTION_THRESHOLD;
+  const [overrideManual, setOverrideManual] = useState(false);
   const [manualPrediction, setManualPrediction] = useState("");
+  const useManualPrediction = needManualPred || overrideManual;
 
   // Scaling Bounding BOX variables.
   let best_bounding_box: BoundingBox | null = null;
@@ -79,8 +83,8 @@ function Form({
     await onSubmit({
       prediction: detection_with_highest_confidence.prediction,
       confidence: detection_with_highest_confidence.confidence,
-      human_corrected: needManualPred,
-      corrected_label: needManualPred ? manualPrediction : null,
+      human_corrected: useManualPrediction,
+      corrected_label: useManualPrediction ? manualPrediction : null,
     });
   };
   console.log("Detections: ", detections);
@@ -164,7 +168,31 @@ function Form({
                     )}
                   </dd>
                 </div>
-                {needManualPred && (
+                <div className="flex justify-between gap-4 py-2">
+                  <dt className="font-medium">Human correction</dt>
+                  <dd className="flex items-center gap-2">
+                    <input
+                      id="human-correction"
+                      type="checkbox"
+                      checked={useManualPrediction}
+                      disabled={needManualPred}
+                      onChange={(event) => {
+                        setOverrideManual(event.target.checked);
+                        if (!event.target.checked) {
+                          setManualPrediction("");
+                        }
+                      }}
+                      className="cursor-pointer"
+                    />
+                    <label htmlFor="human-correction">
+                      {needManualPred
+                        ? "Required"
+                        : "Add correction (optional)"}
+                    </label>
+                  </dd>
+                </div>
+
+                {useManualPrediction && (
                   <div className="flex justify-between gap-4 py-2">
                     <dt className="font-medium">Manual Prediction</dt>
                     <dd>
@@ -175,6 +203,7 @@ function Form({
                           setManualPrediction(event.target.value)
                         }
                         required
+                        className="cursor-pointer"
                       >
                         <option value="" disabled>
                           -- Select health status --

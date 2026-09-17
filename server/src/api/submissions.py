@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.db.session import SessionDependency
 from src.models import Inspection, User
-from src.schemas import InspectResponse
+from src.schemas import InspectResponse, OrgInspectionsResponse
 from src.services.storage_service import upload_blob_image
 
 from src.services.auth_service import get_current_user, oauth2_scheme, get_org_name, get_all_inspections_by_org
@@ -92,15 +92,24 @@ async def create_inspection(
     return inspection
 
 
-@router.get("/retrieve_org_inspections", response_model=list[InspectResponse])
+@router.get("/retrieve_org_inspections", response_model=OrgInspectionsResponse)
 async def get_all_inspections_for_org(
     jwt_token: Annotated[str, Depends(oauth2_scheme)],
     session: SessionDependency
     ):
+    """
+        Return: response model includes [[inspections list], human_correction_count, pending_users_count]
+    """
     # Get organisation id for this admin user using the jwt_token.
-    all_inspections_org = await get_all_inspections_by_org(jwt_token, session)
-
-    return all_inspections_org
+    all_inspections, human_corrected_count, pending_users = (
+        await get_all_inspections_by_org(jwt_token, session)
+    )
+    return {
+        # "total_users": all_users,
+        "inspections": all_inspections,
+        "human_corrected_count": human_corrected_count,
+        "pending_users": pending_users,
+    }
 
 
 
@@ -131,3 +140,8 @@ async def get_inspection(
 
     data = result.scalars().all()
     return data
+
+
+# # Retrieve pending Users information.
+# @router.get("/admin/pending_users")
+# async def get_pending_user_data(jwt_token: Annotated[str, Depends(oauth2_scheme)] , session: SessionDependency):

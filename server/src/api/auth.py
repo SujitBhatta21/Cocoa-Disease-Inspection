@@ -4,7 +4,7 @@ import logging
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from src.schemas import AdminUserCreate, PublicUserCreate, UserResponse
+from src.schemas import AdminUserCreate, PublicUserCreate, UserResponse, UserStatusUpdates
 import src.services.auth_service as auth_service
 from src.services.auth_service import Token, TokenData
 from src.db.session import SessionDependency
@@ -48,6 +48,16 @@ async def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    # If user status is not Approved donot allow login.
+    if user.status != UserStatus.APPROVED:
+        logger.info(f"User status not approved. It's => {user.status}")
+        raise HTTPException(
+            status_code=status.HTTP_423_LOCKED,
+            detail=f"User status is {user.status} for approval by org admin."
+        )
+
+
+
     logger.info(f"Login successful.")
     access_token_expires = timedelta(minutes=auth_service.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
@@ -72,6 +82,19 @@ async def sign_up_user(
         user_status=UserStatus.PENDING,
         session=session,
     )
+
+
+
+
+
+@router.patch("/user/status")
+async def update_users_status(
+    updates: UserStatusUpdates,
+    session: SessionDependency,
+    jwt_token: Annotated[str, Depends(auth_service.oauth2_scheme)],
+) -> bool:    
+    isUpdated = await auth_service.update_status(updates=updates, jwt_token=jwt_token, session=session)
+    return isUpdated
 
 
 @router.post("/signup/admin", status_code=status.HTTP_201_CREATED)

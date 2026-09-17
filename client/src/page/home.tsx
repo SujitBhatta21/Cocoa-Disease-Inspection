@@ -30,12 +30,12 @@ function Home({ authenticated, handleLogin, handleLogout }: HomeProps) {
 
     console.log("response is it true:", response.body);
 
+    const data = await response.json();
+
     if (!response.ok) {
-      alert(`HTTP Error: ${response.status}: ${response.statusText}`);
+      alert(`HTTP Error: (${response.status}) ${data.detail}`);
       throw new Error(`HTTP Error: ${response.status}`);
     }
-
-    const data = await response.json();
 
     const loggedInUser = await handleLogin(data.access_token);
 

@@ -27,12 +27,19 @@ export interface Inspection {
   created_at: string;
 }
 
+export interface OrgInspectionResponse {
+  inspections: Inspection[];
+  human_corrected_count: number;
+  pending_users: UserData[];
+}
+
 type DashboardView = "inspections" | "signup" | "createAdmin";
 
 function Admin({ handleLogout, currentUser }: AdminProps) {
   const VITE_SERVER_URL = import.meta.env.VITE_SERVER_URL;
   const [view, setView] = useState<DashboardView>("inspections");
   const [inspections, setInspections] = useState<Inspection[]>([]);
+  const [pendingUsers, setPendingUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   let viewContent;
@@ -50,7 +57,10 @@ function Admin({ handleLogout, currentUser }: AdminProps) {
         );
         if (!response.ok)
           throw new Error(`Could not load inspections (${response.status}).`);
-        setInspections(await response.json());
+        const data: OrgInspectionResponse = await response.json();
+        console.log(data);
+        setInspections(data.inspections);
+        setPendingUsers(data.pending_users);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Could not load inspections.",
@@ -67,7 +77,7 @@ function Admin({ handleLogout, currentUser }: AdminProps) {
     [inspections],
   );
 
-  const exportManifest = () => {
+  const exportManifestInspections = () => {
     const header = [
       "id",
       "image_url",
@@ -107,17 +117,20 @@ function Admin({ handleLogout, currentUser }: AdminProps) {
 
     const formData = new FormData(e.currentTarget);
 
-    const response = await fetch(`${VITE_SERVER_URL}/api/v1/auth/signup/admin`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+    const response = await fetch(
+      `${VITE_SERVER_URL}/api/v1/auth/signup/admin`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+        body: JSON.stringify({
+          email: formData.get("username"),
+          password: formData.get("password"),
+        }),
       },
-      body: JSON.stringify({
-        email: formData.get("username"),
-        password: formData.get("password"),
-      }),
-    });
+    );
 
     const data = await response.json();
     console.log("DATA Testing in concsole: ", data);
@@ -135,6 +148,12 @@ function Admin({ handleLogout, currentUser }: AdminProps) {
     }
   };
 
+  const handleStatusesUpdated = (updatedUserIds: string[]) => {
+    setPendingUsers((currentUsers) =>
+      currentUsers.filter((user) => !updatedUserIds.includes(user.id)),
+    );
+  };
+
   if (view === "inspections") {
     viewContent = (
       <InspectionView
@@ -144,7 +163,12 @@ function Admin({ handleLogout, currentUser }: AdminProps) {
       />
     );
   } else if (view === "signup") {
-    viewContent = <SignUpApproval />;
+    viewContent = (
+      <SignUpApproval
+        pendingUsers={pendingUsers}
+        onStatusesUpdated={handleStatusesUpdated}
+      />
+    );
   } else {
     viewContent = (
       <CreateAdminView
@@ -166,7 +190,7 @@ function Admin({ handleLogout, currentUser }: AdminProps) {
         <div className="flex gap-3">
           <button
             type="button"
-            onClick={exportManifest}
+            onClick={exportManifestInspections}
             disabled={inspections.length === 0}
             className="cursor-pointer rounded-lg bg-emerald-700 px-4 py-2 font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
@@ -208,10 +232,11 @@ function Admin({ handleLogout, currentUser }: AdminProps) {
         </nav>
 
         <section className="min-w-0">
-          <div className="mb-6 grid gap-4 sm:grid-cols-3">
+          <div className="mb-6 grid gap-4 sm:grid-cols-4">
+            <SummaryCard label="Total Users" value="..." />
             <SummaryCard label="Total inspections" value={inspections.length} />
             <SummaryCard label="Human corrected" value={correctedCount} />
-            <SummaryCard label="Pending users" value="-" />
+            <SummaryCard label="Pending users" value={pendingUsers.length} />
           </div>
 
           {viewContent}

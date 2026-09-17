@@ -35,7 +35,7 @@ async def seed_database() -> None:
                 password_hash="$argon2id$v=19$m=65536,t=3,p=4$wagCPXjifgvUFBzq4hqe3w$CYaIb8sB+wtD+Vu/P4uod1+Qof8h+1g7bbDlBID48Rc",
                 organisation_id=db_org.id,
                 role=UserRole.USER,
-                status=UserStatus.PENDING
+                status=UserStatus.APPROVED
 
             )
             session.add(db_user)

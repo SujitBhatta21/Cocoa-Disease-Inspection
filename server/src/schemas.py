@@ -4,7 +4,7 @@ import datetime
 import uuid
 
 from pydantic import BaseModel, ConfigDict, EmailStr
-from src.role import UserRole
+from src.role import UserRole, UserStatus
 
 
 class OrganisationBase(BaseModel):
@@ -32,12 +32,27 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
-class UserCreate(UserBase):
+class PublicUserCreate(BaseModel):
+    email: EmailStr
+    organisation_name: str
+    password: str
+
+
+class AdminUserCreate(BaseModel):
+    email: EmailStr
     password: str
 
 
 class UserResponse(UserBase):
     id: uuid.UUID
+    created_at: datetime.datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+class PendingUserResponse(BaseModel):
+    id: uuid.UUID
+    email: EmailStr
+    role: UserRole
     created_at: datetime.datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -61,3 +76,18 @@ class InspectResponse(InspectionBase):
     created_at: datetime.datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+# For Admin Organisation Informations in Dashboard
+class OrgInspectionsResponse(BaseModel):
+    inspections: list[InspectResponse]
+    human_corrected_count: int
+    pending_users: list[PendingUserResponse]
+
+# For sign in status change.
+class UserStatusUpdate(BaseModel):
+    user_id: uuid.UUID
+    status: UserStatus
+
+
+class UserStatusUpdates(BaseModel):
+    updates: list[UserStatusUpdate]

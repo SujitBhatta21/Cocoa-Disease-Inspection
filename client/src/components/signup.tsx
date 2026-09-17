@@ -8,8 +8,10 @@ interface SignUpProps {
 }
 
 function SignUp({ handleSubmitSignUp, handleNotRegistered }: SignUpProps) {
-  const [selectedRole, setSelectedRole] = useState("user");
-  const organisation_sample_value = "Dummy_org";
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const handleShowPassword = () => {
+    setIsPasswordVisible(!isPasswordVisible);
+  };
 
   return (
     <div className="border-2 min-h-screen flex flex-col items-center justify-center">
@@ -42,24 +44,21 @@ function SignUp({ handleSubmitSignUp, handleNotRegistered }: SignUpProps) {
           <input
             required
             name="password"
-            type="password"
+            type={isPasswordVisible ? "text" : "password"}
             className="bg-gray-200 hover:bg-gray-300 border-1 pl-1"
           />
+          <div className="flex flex-row items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              id="show-password"
+              onChange={handleShowPassword}
+              className="cursor-pointer"
+            />
+            <label className="cursor-pointer select-none">Show Password</label>
+          </div>
         </label>
 
-        <label className="">
-          ROLE:
-          <select
-            name="role"
-            value={selectedRole}
-            onChange={(event) => setSelectedRole(event.target.value)}
-            required
-            className="border-3"
-          >
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
-          </select>
-        </label>
+        <label className="">ROLE: USER</label>
 
         <button
           className="bg-green-400 gap-3 hover:bg-green-500 text-black cursor-pointer"

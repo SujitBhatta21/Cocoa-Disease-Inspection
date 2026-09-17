@@ -1,4 +1,5 @@
 import os
+import json
 from typing import Annotated
 
 from dotenv import load_dotenv
@@ -6,17 +7,19 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 import jwt
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import select, update
 
-from src.models import User, Organisation
+from src.models import User, Organisation, Inspection
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from pwdlib import PasswordHash
 from pwdlib.hashers.argon2 import Argon2Hasher
 
 from sqlalchemy.exc import SQLAlchemyError
-import uuid
-from src.role import UserRole   # ENUM for role.
+from sqlalchemy import func # For aggregates
+
+from src.role import UserRole, UserStatus   # ENUMs for user access.
+from src.schemas import UserStatusUpdates
 
 
 
@@ -31,7 +34,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")
 load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 10
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 if not SECRET_KEY:
     raise RuntimeError("SECRET_KEY environment variable is missing")
@@ -67,6 +70,7 @@ async def validateSignUp(
         email: str,
         password: str, 
         role: UserRole,
+        user_status: UserStatus,
         session: AsyncSession,
 ) -> bool:
     try:
@@ -108,7 +112,8 @@ async def validateSignUp(
             email=email,
             organisation_id=current_organisation.id,
             password_hash=password_hash,
-            role=role
+            role=role,
+            status=user_status,
         )
         session.add(new_user)
         await session.commit()
@@ -196,7 +201,6 @@ async def get_current_user(
     return user
 
 
-
 async def get_org_name(
         organisation_id,
         session: AsyncSession
@@ -212,16 +216,81 @@ async def get_org_name(
         return org.name
     return
 
+
 """
-FROM THE JWT FASTAPI DOCS.
-Not needed rn cause I don't have is_active attribute for User BaseModel and schema.
+Takes token breaks the token then gets organisation name to get all it's inspections.
 """
-# async def get_current_active_user(
-#         current_user: Annotated[User, Depends(get_current_user)]
-# ):
-#     if current_user.is_active:
-#         raise HTTPException(
-#             status_code=status.HTTP_400_BAD_REQUEST,
-#             detail="Inactive User"
-#         )
-#     return current_user
+async def get_all_inspections_by_org(
+        jwt_token: Annotated[str, Depends(oauth2_scheme)],
+        session: AsyncSession
+):
+    curr_user = await get_current_user(token=jwt_token, session=session)
+
+    # Verifying whether this is an admin.
+    if curr_user.role is not UserRole.ADMIN:
+        raise UNAUTHORISED_401_EXCEPTION
+
+    result = await session.execute(
+        select(Inspection).join(
+            User, User.id == Inspection.user_id
+        ).where(
+            User.organisation_id==curr_user.organisation_id
+        )
+    )
+    all_inspections = result.scalars().all()
+
+    # Count corrected inspections from the already-loaded organisation results.
+    human_corrected_count = sum(
+        inspection.human_corrected for inspection in all_inspections
+    )
+
+    # Get curr organisation pending users count.
+    pending_users = await get_curr_pending_users(jwt_token=jwt_token, session=session)
+
+    return all_inspections, human_corrected_count, pending_users
+
+
+async def get_curr_pending_users(        
+        jwt_token: Annotated[str, Depends(oauth2_scheme)],
+        session: AsyncSession,
+    ):
+
+    curr_user = await get_current_user(token=jwt_token, session=session)
+
+    # Verifying whether this is an admin.
+    if curr_user.role is not UserRole.ADMIN:
+        raise UNAUTHORISED_401_EXCEPTION
+
+    # All necessary validation done in get_all_inspections_by_org.
+    result = await session.execute(
+        select(User).where(User.status==UserStatus.PENDING, User.organisation_id==curr_user.organisation_id)
+    )
+    all_pending_users = result.scalars().all()
+    return all_pending_users
+
+
+
+async def update_status(
+        updates: UserStatusUpdates,
+        jwt_token: Annotated[str, Depends(oauth2_scheme)],
+        session: AsyncSession,
+) -> bool:
+    curr_user = await get_current_user(token=jwt_token, session=session)
+
+    if curr_user.status != UserStatus.APPROVED and curr_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Previllages only for Admin")
+
+    
+    for item in updates.updates:
+        result = await session.execute(
+            select(User).where(User.id==item.user_id)
+        )
+        user = result.scalar_one()
+        user.status = item.status
+
+    await session.commit()
+
+    return True
+
+
+        

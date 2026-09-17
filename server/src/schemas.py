@@ -32,7 +32,14 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
-class UserCreate(UserBase):
+class PublicUserCreate(BaseModel):
+    email: EmailStr
+    organisation_name: str
+    password: str
+
+
+class AdminUserCreate(BaseModel):
+    email: EmailStr
     password: str
 
 

@@ -16,7 +16,7 @@ from pwdlib.hashers.argon2 import Argon2Hasher
 
 from sqlalchemy.exc import SQLAlchemyError
 import uuid
-from src.role import UserRole   # ENUM for role.
+from src.role import UserRole, UserStatus   # ENUMs for user access.
 
 
 
@@ -67,6 +67,7 @@ async def validateSignUp(
         email: str,
         password: str, 
         role: UserRole,
+        user_status: UserStatus,
         session: AsyncSession,
 ) -> bool:
     try:
@@ -108,7 +109,8 @@ async def validateSignUp(
             email=email,
             organisation_id=current_organisation.id,
             password_hash=password_hash,
-            role=role
+            role=role,
+            status=user_status,
         )
         session.add(new_user)
         await session.commit()

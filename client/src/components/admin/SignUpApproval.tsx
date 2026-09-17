@@ -1,5 +1,3 @@
-interface SignUpApprovalProps {}
-
 function SignUpApproval() {
   return (
     <div className="rounded-xl border border-stone-200 bg-white p-8 dark:border-gray-800 dark:bg-gray-900">

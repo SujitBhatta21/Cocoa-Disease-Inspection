@@ -107,16 +107,15 @@ function Admin({ handleLogout, currentUser }: AdminProps) {
 
     const formData = new FormData(e.currentTarget);
 
-    const response = await fetch(`${VITE_SERVER_URL}/api/v1/auth/signup`, {
+    const response = await fetch(`${VITE_SERVER_URL}/api/v1/auth/signup/admin`, {
       method: "POST",
       headers: {
-        "content-Type": "application/JSON",
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
       },
       body: JSON.stringify({
-        organisation_name: formData.get("organisation_name"),
         email: formData.get("username"),
         password: formData.get("password"),
-        role: "admin",
       }),
     });
 

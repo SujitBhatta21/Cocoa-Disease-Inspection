@@ -55,7 +55,7 @@ function Home({ authenticated, handleLogin, handleLogout }: HomeProps) {
 
     const formData = new FormData(e.currentTarget);
 
-    const response = await fetch(`${VITE_SERVER_URL}/api/v1/auth/signup`, {
+    const response = await fetch(`${VITE_SERVER_URL}/api/v1/auth/signup/user`, {
       method: "POST",
       headers: {
         "content-Type": "application/JSON",
@@ -64,7 +64,6 @@ function Home({ authenticated, handleLogin, handleLogout }: HomeProps) {
         organisation_name: formData.get("organisation_name"),
         email: formData.get("username"),
         password: formData.get("password"),
-        role: "user",
       }),
     });
 

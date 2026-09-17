@@ -7,7 +7,7 @@ from sqlalchemy import Boolean, DateTime, Float, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.db.session import Base
-from src.role import UserRole
+from src.role import UserRole, UserStatus
 
 
 def utc_now() -> datetime.datetime:
@@ -33,9 +33,17 @@ class User(Base):
     email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String, nullable=False)
     role: Mapped[UserRole] = mapped_column(default=UserRole.USER, nullable=False)
+    # Attributes to track user status
+    status: Mapped[UserStatus] = mapped_column(default=UserStatus.PENDING, nullable=False)
+    status_reviewed_by_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), nullable=True)
+    status_reviewed_at: Mapped[datetime.datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True
+    )
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now
     )
+    # Relationships
     organisation: Mapped[Organisation] = relationship(back_populates="users")
     inspections: Mapped[list["Inspection"]] = relationship(back_populates="user")
 

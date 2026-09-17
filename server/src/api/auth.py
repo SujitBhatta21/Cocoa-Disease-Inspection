@@ -4,13 +4,12 @@ import logging
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from src.schemas import UserLogin, UserCreate, UserResponse
+from src.schemas import AdminUserCreate, PublicUserCreate, UserResponse
 import src.services.auth_service as auth_service
 from src.services.auth_service import Token, TokenData
 from src.db.session import SessionDependency
 
-from src.role import UserRole
-from src.models import User
+from src.role import UserRole, UserStatus
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 logger = logging.getLogger("uvicorn.error")
@@ -59,39 +58,57 @@ async def login(
 
 
 
-@router.post("/signup")
-async def signUp(
-    signUpData: UserCreate, 
-    session: SessionDependency
-):
-    """
-    FOR THE time being. Each signup cretates new org.
-    I'll later setup the cross-organisation security problem.
-    Where email verification from user, organisation invitation
-    and admin user approving user required.
-    """
-    # Check if it's admin user who requested the service.
-    logger.info(f"SignUpData received: {signUpData}")
-    if signUpData.role == UserRole.ADMIN:
-        logger.info(f"Role verified as admin.")
-
-
-    # Check if the organisation exists.
-    isValid = await auth_service.validateSignUp(
-        org_name=signUpData.organisation_name,
-        email=signUpData.email,
-        password=signUpData.password,
-        role=signUpData.role,
-        session=session
+@router.post("/signup/user", status_code=status.HTTP_201_CREATED)
+async def sign_up_user(
+    sign_up_data: PublicUserCreate,
+    session: SessionDependency,
+) -> bool:
+    """Create a pending standard user through the public signup flow."""
+    return await auth_service.validateSignUp(
+        org_name=sign_up_data.organisation_name,
+        email=sign_up_data.email,
+        password=sign_up_data.password,
+        role=UserRole.USER,
+        user_status=UserStatus.PENDING,
+        session=session,
     )
 
-    if isValid:
-        logger.info(f"Sign Up successful.")
-        return True
-    else:
-        logger.info(f"Sign Up not successful.")
-        return False   
 
+@router.post("/signup/admin", status_code=status.HTTP_201_CREATED)
+async def sign_up_admin(
+    sign_up_data: AdminUserCreate,
+    session: SessionDependency,
+    jwt_token: Annotated[str, Depends(auth_service.oauth2_scheme)],
+) -> bool:
+    """Create an approved admin in the authenticated admin's organisation."""
+    current_admin = await auth_service.get_current_user(
+        token=jwt_token,
+        session=session,
+    )
+    if current_admin.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+        )
+
+    organisation_name = await auth_service.get_org_name(
+        organisation_id=current_admin.organisation_id,
+        session=session,
+    )
+    if organisation_name is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organisation not found",
+        )
+
+    return await auth_service.validateSignUp(
+        org_name=organisation_name,
+        email=sign_up_data.email,
+        password=sign_up_data.password,
+        role=UserRole.ADMIN,
+        user_status=UserStatus.APPROVED,
+        session=session,
+    )
 
 
 
@@ -145,4 +162,3 @@ async def get_user_data(
     )
 
     return userResponse
-

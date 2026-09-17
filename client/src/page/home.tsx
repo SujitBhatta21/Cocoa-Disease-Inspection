@@ -64,7 +64,7 @@ function Home({ authenticated, handleLogin, handleLogout }: HomeProps) {
         organisation_name: formData.get("organisation_name"),
         email: formData.get("username"),
         password: formData.get("password"),
-        role: formData.get("role"),
+        role: "user",
       }),
     });
 

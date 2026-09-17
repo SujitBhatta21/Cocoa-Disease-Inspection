@@ -70,6 +70,12 @@ async def signUp(
     Where email verification from user, organisation invitation
     and admin user approving user required.
     """
+    # Check if it's admin user who requested the service.
+    logger.info(f"SignUpData received: {signUpData}")
+    if signUpData.role == UserRole.ADMIN:
+        logger.info(f"Role verified as admin.")
+
+
     # Check if the organisation exists.
     isValid = await auth_service.validateSignUp(
         org_name=signUpData.organisation_name,

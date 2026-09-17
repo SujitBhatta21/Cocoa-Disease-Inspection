@@ -8,9 +8,12 @@ AALC-project repo: https://github.com/SujitBhatta21/AALC-IndividualProject
 import { useEffect, useMemo, useState } from "react";
 import InspectionView from "../components/admin/InspectionView";
 import SignUpApproval from "../components/admin/SignUpApproval";
+import CreateAdminView from "../components/admin/CreateAdminView";
+import type { UserData } from "../types/auth";
 
 interface AdminProps {
   handleLogout: () => void;
+  currentUser: UserData | null;
 }
 
 export interface Inspection {
@@ -26,7 +29,7 @@ export interface Inspection {
 
 type DashboardView = "inspections" | "signup" | "createAdmin";
 
-function Admin({ handleLogout }: AdminProps) {
+function Admin({ handleLogout, currentUser }: AdminProps) {
   const VITE_SERVER_URL = import.meta.env.VITE_SERVER_URL;
   const [view, setView] = useState<DashboardView>("inspections");
   const [inspections, setInspections] = useState<Inspection[]>([]);
@@ -99,6 +102,40 @@ function Admin({ handleLogout }: AdminProps) {
     URL.revokeObjectURL(url);
   };
 
+  const handleSubmitSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.currentTarget);
+
+    const response = await fetch(`${VITE_SERVER_URL}/api/v1/auth/signup`, {
+      method: "POST",
+      headers: {
+        "content-Type": "application/JSON",
+      },
+      body: JSON.stringify({
+        organisation_name: formData.get("organisation_name"),
+        email: formData.get("username"),
+        password: formData.get("password"),
+        role: "admin",
+      }),
+    });
+
+    const data = await response.json();
+    console.log("DATA Testing in concsole: ", data);
+
+    if (!response.ok) {
+      alert(
+        `Error: ${response.status ? `${response.status} (${response.statusText}) : ${data.detail}` : "Something went wrong"}`,
+      );
+      console.log(
+        `RESPONSE Status: ${response.status}: ${response.statusText}`,
+      );
+    } else {
+      console.log("GOT FROM BACKEND: ", data);
+      alert(`Admin Sign Up Successful by: ${currentUser?.email}`);
+    }
+  };
+
   if (view === "inspections") {
     viewContent = (
       <InspectionView
@@ -110,7 +147,12 @@ function Admin({ handleLogout }: AdminProps) {
   } else if (view === "signup") {
     viewContent = <SignUpApproval />;
   } else {
-    viewContent = null;
+    viewContent = (
+      <CreateAdminView
+        handleSubmitSignUp={handleSubmitSignUp}
+        currentUser={currentUser}
+      />
+    );
   }
 
   return (

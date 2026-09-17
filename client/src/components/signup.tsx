@@ -8,7 +8,6 @@ interface SignUpProps {
 }
 
 function SignUp({ handleSubmitSignUp, handleNotRegistered }: SignUpProps) {
-  const [selectedRole, setSelectedRole] = useState("user");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const handleShowPassword = () => {
     setIsPasswordVisible(!isPasswordVisible);

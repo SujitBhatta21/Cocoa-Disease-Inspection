@@ -107,7 +107,9 @@ function App() {
           element={
             <ProtectedRoute
               authStatus={authStatus}
-              element={<Admin handleLogout={handleLogout} />}
+              element={
+                <Admin handleLogout={handleLogout} currentUser={currentUser} />
+              }
               userRole={currentUser?.role}
               requiredRole="admin"
             />

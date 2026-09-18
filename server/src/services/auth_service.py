@@ -217,6 +217,22 @@ async def get_org_name(
     return
 
 
+async def get_admin_and_user_count(org_id, session:AsyncSession) -> list[int]:
+    res = []
+
+    result = await session.execute(
+        select(func.count(User.id)).where(User.role==UserRole.ADMIN)
+    )
+    result = await session.execute(
+        select(
+            func.count().filter(User.role == UserRole.ADMIN),
+            func.count().filter(User.role == UserRole.USER)
+        ).where(User.organisation_id==org_id)
+    )
+    admin_count, user_count = result.one()
+
+    return [admin_count, user_count]
+
 """
 Takes token breaks the token then gets organisation name to get all it's inspections.
 """
@@ -229,6 +245,9 @@ async def get_all_inspections_by_org(
     # Verifying whether this is an admin.
     if curr_user.role is not UserRole.ADMIN:
         raise UNAUTHORISED_401_EXCEPTION
+
+    # Total user (including admin in org)
+    all_user_count = await get_admin_and_user_count(curr_user.organisation_id, session)
 
     result = await session.execute(
         select(Inspection).join(
@@ -247,7 +266,7 @@ async def get_all_inspections_by_org(
     # Get curr organisation pending users count.
     pending_users = await get_curr_pending_users(jwt_token=jwt_token, session=session)
 
-    return all_inspections, human_corrected_count, pending_users
+    return all_user_count, all_inspections, human_corrected_count, pending_users
 
 
 async def get_curr_pending_users(        
@@ -293,4 +312,33 @@ async def update_status(
     return True
 
 
-        
+
+async def update_password(
+        jwt_token: Annotated[str, Depends(oauth2_scheme)],
+        new_password: str,
+        curr_password: str,
+        session: AsyncSession, 
+):
+    curr_user = await get_current_user(token=jwt_token, session=session)
+
+    # Convert the new_password to Argon2 or Bcrypt2 
+    password_hash = generate_hash(new_password)
+
+    try:
+        # First verify if user curr_password match one stored in db.
+        if verify_hash_password(plain_password=curr_password, hashed_password=curr_user.password_hash):
+            # Update the password.
+            curr_user.password_hash = password_hash
+            await session.commit()
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Password doesn't match",
+            )
+
+    except SQLAlchemyError as e:
+        await session.rollback()
+        print(f"ERROR {e.code}: {e._message}")
+        raise
+
+    return True

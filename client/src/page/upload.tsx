@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { FaArrowDown } from "react-icons/fa";
 import Form from "../components/Form";
 import type { UserData } from "../types/auth";
+import ChangePassword from "../components/ChangePassword";
 
 export interface BoundingBox {
   x1: number;
@@ -43,6 +44,7 @@ function UploadPage({ handleLogout, currentUser }: UploadPageProps) {
     null,
   );
   const [openForm, setOpenForm] = useState(false);
+  const [openPassword, setOpenPassword] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -129,9 +131,21 @@ function UploadPage({ handleLogout, currentUser }: UploadPageProps) {
     setOpenForm(false);
   };
 
+  const handleOpenChangePassword = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    setOpenPassword((isOpen) => !isOpen);
+  };
+
   return (
     <main>
-      <header className="flex justify-end p-4 sm:p-6">
+      <header className="flex justify-end p-4 sm:p-6 gap-4">
+        <button
+          type="button"
+          onClick={handleOpenChangePassword}
+          className="cursor-pointer rounded-lg bg-emerald-700 px-4 py-2 font-semibold text-white transition-colors hover:bg-emerald-800"
+        >
+          Change Password
+        </button>
         <button
           type="button"
           onClick={handleLogout}
@@ -215,6 +229,10 @@ function UploadPage({ handleLogout, currentUser }: UploadPageProps) {
             onClose={onFormClose}
             currentUserData={currentUser}
           />
+        )}
+
+        {openPassword && (
+          <ChangePassword onClose={() => setOpenPassword(false)} />
         )}
       </div>
     </main>

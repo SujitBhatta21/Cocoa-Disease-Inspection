@@ -312,4 +312,33 @@ async def update_status(
     return True
 
 
-        
+
+async def update_password(
+        jwt_token: Annotated[str, Depends(oauth2_scheme)],
+        new_password: str,
+        curr_password: str,
+        session: AsyncSession, 
+):
+    curr_user = await get_current_user(token=jwt_token, session=session)
+
+    # Convert the new_password to Argon2 or Bcrypt2 
+    password_hash = generate_hash(new_password)
+
+    try:
+        # First verify if user curr_password match one stored in db.
+        if verify_hash_password(plain_password=curr_password, hashed_password=curr_user.password_hash):
+            # Update the password.
+            curr_user.password_hash = password_hash
+            await session.commit()
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Password doesn't match",
+            )
+
+    except SQLAlchemyError as e:
+        await session.rollback()
+        print(f"ERROR {e.code}: {e._message}")
+        raise
+
+    return True

@@ -92,3 +92,8 @@ class UserStatusUpdate(BaseModel):
 
 class UserStatusUpdates(BaseModel):
     updates: list[UserStatusUpdate]
+
+
+class PasswordUpdate(BaseModel):
+    new_password: str
+    current_password: str

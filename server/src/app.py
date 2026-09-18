@@ -37,25 +37,3 @@ app.add_middleware(
 @app.get("/health", tags=["health"])
 async def health() -> dict[str, str]:
     return {"status": "ok"}
-
-
-"""
-POST /inspect
-
-POST /override
-
-GET /images
-
-GET /statistics
-
-GET /export
-"""
-
-@app.get("/statistics")
-async def getStatistics(): # For admin
-    return
-
-# TODO: Exporting the new thing
-@app.get("/export")
-async def getExport():
-    return 

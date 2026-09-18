@@ -4,7 +4,7 @@ import logging
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from src.schemas import AdminUserCreate, PublicUserCreate, UserResponse, UserStatusUpdates
+from src.schemas import AdminUserCreate, PublicUserCreate, UserResponse, UserStatusUpdates, PasswordUpdate
 import src.services.auth_service as auth_service
 from src.services.auth_service import Token, TokenData
 from src.db.session import SessionDependency
@@ -133,6 +133,23 @@ async def sign_up_admin(
         session=session,
     )
 
+
+
+@router.patch("/change_password")
+async def change_password(
+    jwt_token: Annotated[str, Depends(auth_service.oauth2_scheme)],
+    session: SessionDependency,
+    formData: PasswordUpdate,
+) -> bool:
+    # Not allowed to touch db from endpoint only services handles those.
+    temp = await auth_service.update_password(
+        jwt_token=jwt_token,
+        new_password=formData.new_password,
+        curr_password=formData.current_password,
+        session=session
+    )
+    
+    return True
 
 
 """

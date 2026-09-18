@@ -79,6 +79,7 @@ class InspectResponse(InspectionBase):
 
 # For Admin Organisation Informations in Dashboard
 class OrgInspectionsResponse(BaseModel):
+    all_user_count: list[int]
     inspections: list[InspectResponse]
     human_corrected_count: int
     pending_users: list[PendingUserResponse]

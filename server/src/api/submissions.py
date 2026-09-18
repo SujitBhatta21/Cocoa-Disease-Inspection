@@ -101,11 +101,11 @@ async def get_all_inspections_for_org(
         Return: response model includes [[inspections list], human_correction_count, pending_users_count]
     """
     # Get organisation id for this admin user using the jwt_token.
-    all_inspections, human_corrected_count, pending_users = (
+    all_user_count, all_inspections, human_corrected_count, pending_users = (
         await get_all_inspections_by_org(jwt_token, session)
     )
     return {
-        # "total_users": all_users,
+        "all_user_count": all_user_count,
         "inspections": all_inspections,
         "human_corrected_count": human_corrected_count,
         "pending_users": pending_users,

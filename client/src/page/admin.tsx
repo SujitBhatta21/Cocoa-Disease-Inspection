@@ -28,6 +28,7 @@ export interface Inspection {
 }
 
 export interface OrgInspectionResponse {
+  all_user_count: number[];
   inspections: Inspection[];
   human_corrected_count: number;
   pending_users: UserData[];
@@ -40,6 +41,8 @@ function Admin({ handleLogout, currentUser }: AdminProps) {
   const [view, setView] = useState<DashboardView>("inspections");
   const [inspections, setInspections] = useState<Inspection[]>([]);
   const [pendingUsers, setPendingUsers] = useState<UserData[]>([]);
+  const [adminCount, setAdminCount] = useState<number>(0);
+  const [userCount, setUserCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   let viewContent;
@@ -61,6 +64,8 @@ function Admin({ handleLogout, currentUser }: AdminProps) {
         console.log(data);
         setInspections(data.inspections);
         setPendingUsers(data.pending_users);
+        setAdminCount(data.all_user_count[0]);
+        setUserCount(data.all_user_count[1]);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Could not load inspections.",
@@ -233,7 +238,7 @@ function Admin({ handleLogout, currentUser }: AdminProps) {
 
         <section className="min-w-0">
           <div className="mb-6 grid gap-4 sm:grid-cols-4">
-            <SummaryCard label="Total Users" value="..." />
+            <SummaryCard label="Total Users" value={adminCount + userCount} />
             <SummaryCard label="Total inspections" value={inspections.length} />
             <SummaryCard label="Human corrected" value={correctedCount} />
             <SummaryCard label="Pending users" value={pendingUsers.length} />

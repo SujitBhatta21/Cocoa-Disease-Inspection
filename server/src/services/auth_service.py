@@ -217,6 +217,22 @@ async def get_org_name(
     return
 
 
+async def get_admin_and_user_count(org_id, session:AsyncSession) -> list[int]:
+    res = []
+
+    result = await session.execute(
+        select(func.count(User.id)).where(User.role==UserRole.ADMIN)
+    )
+    result = await session.execute(
+        select(
+            func.count().filter(User.role == UserRole.ADMIN),
+            func.count().filter(User.role == UserRole.USER)
+        ).where(User.organisation_id==org_id)
+    )
+    admin_count, user_count = result.one()
+
+    return [admin_count, user_count]
+
 """
 Takes token breaks the token then gets organisation name to get all it's inspections.
 """
@@ -229,6 +245,9 @@ async def get_all_inspections_by_org(
     # Verifying whether this is an admin.
     if curr_user.role is not UserRole.ADMIN:
         raise UNAUTHORISED_401_EXCEPTION
+
+    # Total user (including admin in org)
+    all_user_count = await get_admin_and_user_count(curr_user.organisation_id, session)
 
     result = await session.execute(
         select(Inspection).join(
@@ -247,7 +266,7 @@ async def get_all_inspections_by_org(
     # Get curr organisation pending users count.
     pending_users = await get_curr_pending_users(jwt_token=jwt_token, session=session)
 
-    return all_inspections, human_corrected_count, pending_users
+    return all_user_count, all_inspections, human_corrected_count, pending_users
 
 
 async def get_curr_pending_users(        

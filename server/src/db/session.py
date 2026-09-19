@@ -18,7 +18,7 @@ from fastapi import Depends
 load_dotenv()
 
 
-DATABASE_URL = os.getenv('DATABASE_URL_LOCAL')
+DATABASE_URL = os.getenv('DATABASE_URL_PRODUCTION')
 
 if DATABASE_URL is None:
     raise RuntimeError("DATABASE_URL environment variable is not set")

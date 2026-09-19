@@ -1,6 +1,7 @@
 """Database engine, SQLAlchemy base, and session dependency."""
 
 from collections.abc import AsyncGenerator
+from dotenv import load_dotenv
 import os
 
 from sqlalchemy.ext.asyncio import (
@@ -14,14 +15,13 @@ from typing import Annotated
 from fastapi import Depends
 
 
-POSTGRES_DB = os.getenv("POSTGRES_DB")
-POSTGRES_USER = os.getenv("POSTGRES_USER")
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+load_dotenv()
 
-DATABASE_URL = (
-    f"postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}"
-    f"@localhost:5432/{POSTGRES_DB}"
-)
+
+DATABASE_URL = os.getenv('DATABASE_URL_LOCAL')
+
+if DATABASE_URL is None:
+    raise RuntimeError("DATABASE_URL environment variable is not set")
 
 
 class Base(DeclarativeBase):

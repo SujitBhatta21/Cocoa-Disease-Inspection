@@ -23,6 +23,7 @@ app.include_router(api_router, prefix="/api/v1")
 ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "https://dad-reflux-goldmine.ngrok-free.dev",
+    "https://cocoa-disease-inspection.vercel.app",
 ]
 
 app.add_middleware(

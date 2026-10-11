@@ -39,6 +39,7 @@ function UploadPage({ handleLogout, currentUser }: UploadPageProps) {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isAnalysing, setIsAnalysing] = useState<Boolean>(false);
   const VITE_SERVER_URL = import.meta.env.VITE_SERVER_URL;
   const [inspectResult, setInspectResult] = useState<InspectionResult | null>(
     null,
@@ -67,28 +68,34 @@ function UploadPage({ handleLogout, currentUser }: UploadPageProps) {
 
     formData.append("image", selectedImage);
 
-    const response = await fetch(`${VITE_SERVER_URL}/api/v1/inspect`, {
-      method: "POST",
-      body: formData,
-    });
+    setIsAnalysing(true);
 
-    if (!response.ok) {
-      alert(`HTTP Error: ${response.status}: ${response.statusText}`);
-      throw new Error(`HTTP Error: ${response.status}`);
-    }
+    try {
+      const response = await fetch(`${VITE_SERVER_URL}/api/v1/inspect`, {
+        method: "POST",
+        body: formData,
+      });
 
-    const data: InspectionResult = await response.json();
+      if (!response.ok) {
+        alert(`HTTP Error: ${response.status}: ${response.statusText}`);
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
 
-    if (data.detection_count <= 0) {
-      alert(
-        "ERROR: Image uploaded has 0 confidence that a cocoa leaf is there.",
-      );
-    } else {
+      const data: InspectionResult = await response.json();
+
+      if (data.detection_count <= 0) {
+        alert("No cocoa pod was detected.");
+        return;
+      }
+
       setInspectResult(data);
       setOpenForm(true);
-
-      console.log("data:", data);
-      // console.log(JSON.stringify(data, null, 2));
+    } catch (error) {
+      console.error("Inspection failed:", error);
+      alert("The image could not be analysed. Please try again.");
+    } finally {
+      // Runs after success, failure, or an early return inside try.
+      setIsAnalysing(false);
     }
   };
 
@@ -108,23 +115,32 @@ function UploadPage({ handleLogout, currentUser }: UploadPageProps) {
       formData.append("corrected_label", submissionData.corrected_label);
     }
 
-    const response = await fetch(`${VITE_SERVER_URL}/api/v1/submissions`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-      },
-      body: formData,
-    });
+    setIsAnalysing(true);
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Submission failed (${response.status}): ${error}`);
+    try {
+      const response = await fetch(`${VITE_SERVER_URL}/api/v1/submissions`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+        body: formData,
+      });
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Submission failed (${response.status}): ${error}`);
+      }
+
+      await response.json();
+      setOpenForm(false);
+      setPreviewUrl(null);
+      alert("INSPECTION Data submitted and saved.");
+    } catch (error) {
+      console.error("Inspection failed:", error);
+      alert("The image could not be analysed. Please try again.");
+    } finally {
+      // Runs after success, failure, or an early return inside try.
+      setIsAnalysing(false);
     }
-
-    await response.json();
-    setOpenForm(false);
-    setPreviewUrl(null);
-    alert("INSPECTION Data submitted and saved.");
   };
 
   const onFormClose = async () => {
@@ -235,6 +251,13 @@ function UploadPage({ handleLogout, currentUser }: UploadPageProps) {
           <ChangePassword onClose={() => setOpenPassword(false)} />
         )}
       </div>
+      {isAnalysing && (
+        <span
+          className="size-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600"
+          role="status"
+          aria-label="Analysing image"
+        ></span>
+      )}
     </main>
   );
 }

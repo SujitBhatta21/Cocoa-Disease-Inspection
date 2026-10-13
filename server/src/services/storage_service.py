@@ -4,6 +4,8 @@ Service for Azure Storage
 import os
 import uuid
 import logging
+import mimetypes
+from urllib.parse import unquote, urlparse
 from azure.identity import ManagedIdentityCredential, DefaultAzureCredential
 from azure.storage.blob import BlobServiceClient
 from azure.core.pipeline.policies import UserAgentPolicy
@@ -36,6 +38,31 @@ blob_service_client = BlobServiceClient(account_url, credential=def_credential, 
 def get_storage_account_url():
     return account_url
 
+
+def download_blob_image(blob_url: str) -> tuple[bytes, str]:
+    """Download an image from this application's configured storage account."""
+    parsed_url = urlparse(blob_url)
+    expected_host = urlparse(account_url).netloc
+    path = unquote(parsed_url.path.lstrip("/"))
+    container_name, separator, blob_name = path.partition("/")
+
+    if (
+        parsed_url.scheme != "https"
+        or parsed_url.netloc != expected_host
+        or not separator
+        or not container_name
+        or not blob_name
+    ):
+        raise ValueError("Invalid Blob Storage image URL")
+
+    blob_client = blob_service_client.get_blob_client(
+        container=container_name,
+        blob=blob_name,
+    )
+    image_bytes = blob_client.download_blob().readall()
+    content_type = mimetypes.guess_type(blob_name)[0] or "application/octet-stream"
+    return image_bytes, content_type
+
 def upload_blob_image(image: bytes, filename, container_name: str):
     try:
         if filename:
@@ -51,7 +78,7 @@ def upload_blob_image(image: bytes, filename, container_name: str):
             if not container_client.exists():
                 try:
                     container_client.create_container(
-                        public_access="container" # Makes sure Access level is not annonomous (change if needed).
+                        # public_access="container" # Makes sure Access level is not annonomous (change if needed).
                         )
                     logger.info(f"Container '{container_name}' created successfully.")
                 except ResourceExistsError:

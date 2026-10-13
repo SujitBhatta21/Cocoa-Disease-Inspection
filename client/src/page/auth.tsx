@@ -5,7 +5,7 @@ import SignUp from "../components/signup";
 import LoggedIn from "../components/loggedIn";
 import type { UserData } from "../types/auth";
 import cocoaLogo from "../assets/Cocoa Disease Inspection Logo.png";
-import cocoaFlower from "../assets/Theobroma_cacao_flower_01.JPG";
+import cocoaFlower from "../assets/Theobroma_cacao_flower_01.png";
 
 interface AuthProps {
   authenticated: boolean;

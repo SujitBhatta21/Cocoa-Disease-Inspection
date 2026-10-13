@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { Inspection } from "../../page/admin";
 
 interface InspectionViewProps {
@@ -41,17 +42,7 @@ function InspectionView({
                   className="border-t border-stone-200 dark:border-gray-800"
                 >
                   <td className="p-3">
-                    <a
-                      href={inspection.image_url}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <img
-                        src={inspection.image_url}
-                        alt={`Inspection classified as ${inspection.prediction}`}
-                        className="h-14 w-14 rounded-lg object-cover"
-                      />
-                    </a>
+                    <InspectionThumbnail inspection={inspection} />
                   </td>
                   <td className="p-3 font-semibold">
                     {inspection.corrected_label ?? inspection.prediction}
@@ -72,6 +63,86 @@ function InspectionView({
         </div>
       )}
     </div>
+  );
+}
+
+function InspectionThumbnail({ inspection }: { inspection: Inspection }) {
+  const VITE_SERVER_URL = import.meta.env.VITE_SERVER_URL;
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    let objectUrl: string | null = null;
+
+    const loadImage = async () => {
+      try {
+        const response = await fetch(
+          `${VITE_SERVER_URL}/api/v1/admin/submissions/${inspection.id}/image`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+            },
+            signal: controller.signal,
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error(`Could not load image (${response.status}).`);
+        }
+
+        objectUrl = URL.createObjectURL(await response.blob());
+        setImageUrl(objectUrl);
+      } catch (error) {
+        if (error instanceof DOMException && error.name === "AbortError") return;
+        setFailed(true);
+      }
+    };
+
+    void loadImage();
+
+    return () => {
+      controller.abort();
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [VITE_SERVER_URL, inspection.id]);
+
+  if (failed) {
+    return (
+      <div
+        className="flex h-14 w-14 items-center justify-center rounded-lg bg-stone-100 text-center text-xs text-slate-500 dark:bg-gray-800 dark:text-gray-400"
+        role="img"
+        aria-label={`Image unavailable for inspection ${inspection.id}`}
+      >
+        Unavailable
+      </div>
+    );
+  }
+
+  if (!imageUrl) {
+    return (
+      <div
+        className="h-14 w-14 animate-pulse rounded-lg bg-stone-200 dark:bg-gray-800"
+        role="status"
+        aria-label={`Loading image for inspection ${inspection.id}`}
+      />
+    );
+  }
+
+  return (
+    <a
+      href={imageUrl}
+      target="_blank"
+      rel="noreferrer"
+      aria-label={`Open image for inspection ${inspection.id}`}
+      className="block h-14 w-14 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+    >
+      <img
+        src={imageUrl}
+        alt={`Inspection classified as ${inspection.prediction}`}
+        className="h-14 w-14 rounded-lg object-cover"
+      />
+    </a>
   );
 }
 

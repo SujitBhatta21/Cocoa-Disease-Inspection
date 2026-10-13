@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from src.db.session import SessionDependency
 from src.schemas import PasswordUpdate, UserResponse
 import src.services.auth_service as auth_service
+from src.role import UserStatus
 
 
 router = APIRouter(prefix="/users", tags=["users"])
